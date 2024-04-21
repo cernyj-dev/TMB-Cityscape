@@ -115,6 +115,9 @@ class MyListener(TuioListener):
 
     def remove_tuio_object(self, obj):
         print("Object " ,obj.session_id, " of class ",obj.class_id," was deleted.")
+        lx= myObjects[obj.session_id].last_x
+        ly= myObjects[obj.session_id].last_y
+        mygrid.m_grid[floor(lx/40)][floor(ly/40)].Erase()
         myObjects[obj.session_id].delete()
         del myObjects[obj.session_id]
 
