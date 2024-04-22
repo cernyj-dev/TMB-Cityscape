@@ -2,3 +2,4 @@
 * Uses tkinter to draw recieved objects onto canvas
 * Necessary dependencies:
     ``` pip3 install python-tuio ```
+    ``` pip3 install python-osc ```
