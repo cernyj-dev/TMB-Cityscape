@@ -52,6 +52,7 @@ class MySpace():
 def draw(space: MySpace):
     # TODO get the QR ID
     # TODO get the corresponding Node Limits for ruleset
+      # TODO probable add the myObjects dictionary as an argument
     # TODO iterate over the limits and nodes
     isLimitOk = False
     if (isLimitOk):
