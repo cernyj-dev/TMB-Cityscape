@@ -5,6 +5,7 @@ from threading import Thread
 from decimal import Decimal
 import os
 import tkinter as tk
+from helper_files.ConfigParser import Ruleset
 
 ##
 # DEFAULT CONFIG
@@ -13,6 +14,11 @@ import tkinter as tk
 w=640
 h=480
 scale = 15
+magic_number = 40
+config_path = 'config.json'
+
+ruleset = Ruleset.parse_json(config_path)
+print(ruleset)
 
 plocha = tk.Canvas(width=w,height=h)
 plocha.pack()
@@ -46,11 +52,11 @@ class MyGrid():
     def __init__(self):
         self.m_grid = []
         col_cnt = 0
-        for i in range(0,w,40):
+        for i in range(0,w,magic_number):
             self.m_grid.append([])
             row_cnt=0
-            for j in range(0,h,40):
-                self.m_grid[col_cnt].append(MySpace(i,j,i+40,j+40,col_cnt,row_cnt))
+            for j in range(0,h,magic_number):
+                self.m_grid[col_cnt].append(MySpace(i,j,i+magic_number,j+magic_number,col_cnt,row_cnt))
                 row_cnt = row_cnt+1
             col_cnt = col_cnt+1        
 #--------------------------------------------------------------------
@@ -89,7 +95,7 @@ class MyListener(TuioListener):
         actual_y=Decimal(y*h)
 
         myObjects.update({obj.session_id : MyObject(obj.class_id,actual_x,actual_y)})
-        mygrid.m_grid[floor(actual_x/40)][floor(actual_y/40)].Fill()
+        mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)].Fill()
 
     def update_tuio_object(self, obj):
         x,y = obj.position
@@ -106,9 +112,9 @@ class MyListener(TuioListener):
 
         myObjects[obj.session_id].move(delta_x,delta_y)
 
-        if (not mygrid.m_grid[floor(lx/40)][floor(ly/40)].__eq__(mygrid.m_grid[floor(actual_x/40)][floor(actual_y/40)])):
-            mygrid.m_grid[floor(lx/40)][floor(ly/40)].Erase()
-            mygrid.m_grid[floor(actual_x/40)][floor(actual_y/40)].Fill()
+        if (not mygrid.m_grid[floor(lx/magic_number)][floor(ly/magic_number)].__eq__(mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)])):
+            mygrid.m_grid[floor(lx/magic_number)][floor(ly/magic_number)].Erase()
+            mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)].Fill()
 
         myObjects[obj.session_id].last_x = actual_x
         myObjects[obj.session_id].last_y = actual_y
@@ -117,7 +123,7 @@ class MyListener(TuioListener):
         print("Object " ,obj.session_id, " of class ",obj.class_id," was deleted.")
         lx= myObjects[obj.session_id].last_x
         ly= myObjects[obj.session_id].last_y
-        mygrid.m_grid[floor(lx/40)][floor(ly/40)].Erase()
+        mygrid.m_grid[floor(lx/magic_number)][floor(ly/magic_number)].Erase()
         myObjects[obj.session_id].delete()
         del myObjects[obj.session_id]
 
