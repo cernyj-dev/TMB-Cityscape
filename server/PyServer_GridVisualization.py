@@ -44,10 +44,16 @@ class MySpace():
         return self.top_l == other.top_l and self.bot_r == other.bot_r
     
     def Fill(self):
-        self.fill = plocha.create_rectangle(self.top_l,self.top_r,self.bot_l,self.bot_r,fill="blue")
+        draw(self)
     def Erase(self):
         plocha.delete(self.fill)
 
+
+def draw(space: MySpace):
+    space.fill = plocha.create_rectangle(space.top_l,space.top_r,space.bot_l,space.bot_r,fill="blue")
+    space.fill = plocha.create_rectangle(space.top_l-magic_number,space.top_r,space.bot_l-magic_number,space.bot_r,fill="green")
+    space.fill = plocha.create_rectangle(space.top_l,space.top_r-magic_number,space.bot_l,space.bot_r-magic_number,fill="red")
+    return
 class MyGrid():
     def __init__(self):
         self.m_grid = []
