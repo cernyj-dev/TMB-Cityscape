@@ -50,9 +50,14 @@ class MySpace():
 
 
 def draw(space: MySpace):
-    space.fill = plocha.create_rectangle(space.top_l,space.top_r,space.bot_l,space.bot_r,fill="blue")
-    space.fill = plocha.create_rectangle(space.top_l-magic_number,space.top_r,space.bot_l-magic_number,space.bot_r,fill="green")
-    space.fill = plocha.create_rectangle(space.top_l,space.top_r-magic_number,space.bot_l,space.bot_r-magic_number,fill="red")
+    # TODO get the QR ID
+    # TODO get the corresponding Node Limits for ruleset
+    # TODO iterate over the limits and nodes
+    isLimitOk = False
+    if (isLimitOk):
+      space.fill = plocha.create_rectangle(space.top_l,space.top_r,space.bot_l,space.bot_r,fill="green")
+    else:
+      space.fill = plocha.create_rectangle(space.top_l,space.top_r,space.bot_l,space.bot_r,fill="red")
     return
 class MyGrid():
     def __init__(self):
