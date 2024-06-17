@@ -15,7 +15,7 @@ w=640
 h=480
 scale = 15
 magic_number = 40
-config_path = 'config.json'
+config_path = 'helper_files/config.json'
 
 ruleset = Ruleset.parse_json(config_path)
 print(ruleset)
@@ -43,17 +43,24 @@ class MySpace():
             return NotImplemented
         return self.top_l == other.top_l and self.bot_r == other.bot_r
     
-    def Fill(self):
-        draw(self)
+    def Fill(self, curr_obj):
+        draw(self, curr_obj)
     def Erase(self):
         plocha.delete(self.fill)
 
 
-def draw(space: MySpace):
+def draw(space: MySpace, curr_obj):
     # TODO get the QR ID
+    #curr_id = curr_obj.class_id
+
     # TODO get the corresponding Node Limits for ruleset
-      # TODO probable add the myObjects dictionary as an argument
+    #print("Current object ID: ", curr_obj.class_id, "Currect object name: ", ruleset[curr_obj.class_id].name)
+    print("Current object ID: ", curr_obj.class_id)
+    print("Current object name: ", ruleset.nodes[curr_obj.class_id])
+
+    # TODO probable add the myObjects dictionary as an argument
     # TODO iterate over the limits and nodes
+    # TODO check if the object's limits are completed by this current node
     isLimitOk = False
     if (isLimitOk):
       space.fill = plocha.create_rectangle(space.top_l,space.top_r,space.bot_l,space.bot_r,fill="green")
@@ -106,8 +113,9 @@ class MyListener(TuioListener):
         actual_x=Decimal(x*w)
         actual_y=Decimal(y*h)
 
-        myObjects.update({obj.session_id : MyObject(obj.class_id,actual_x,actual_y)})
-        mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)].Fill()
+        new_obj = MyObject(obj.class_id,actual_x,actual_y)
+        myObjects.update({obj.session_id : new_obj})
+        mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)].Fill(new_obj) # Gonna need to pass through the obj.session_id?
 
     def update_tuio_object(self, obj):
         x,y = obj.position
@@ -124,9 +132,11 @@ class MyListener(TuioListener):
 
         myObjects[obj.session_id].move(delta_x,delta_y)
 
+
+
         if (not mygrid.m_grid[floor(lx/magic_number)][floor(ly/magic_number)].__eq__(mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)])):
             mygrid.m_grid[floor(lx/magic_number)][floor(ly/magic_number)].Erase()
-            mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)].Fill()
+            mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)].Fill(MyObject(obj.class_id,actual_x,actual_y))
 
         myObjects[obj.session_id].last_x = actual_x
         myObjects[obj.session_id].last_y = actual_y
