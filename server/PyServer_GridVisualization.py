@@ -39,8 +39,8 @@ class MySpace():
         self.col = col
         self.row = row
         self.obj_class_id = -1
-        self.obj_name = ""
-        self.obj_limits = {}
+        self.obj_name = "" # name of the object corresponding to the config file
+        self.obj_limits = {} # dictionary for limits of the object - structured as string: int (limit name: limit counter)
         self.image = plocha.create_rectangle(x1,y1,x2,y2)
         plocha.create_text(x1+20,y1+20,text='{},{}'.format(col,row),font="Arial 10")
 
@@ -54,6 +54,10 @@ class MySpace():
     def Erase(self):
         self.obj_class_id = -1
         self.obj_name = ""
+
+        
+
+
         plocha.delete(self.fill)
 
 #--------------------------------------------------------------------
@@ -76,16 +80,17 @@ mygrid = MyGrid()
 #
 #--------------------------------------------------------------------
 
-def draw(space: MySpace):
+def draw(space: MySpace): # space is the object that is being moved
     print("===================================")
     print("self object ID: ", space.obj_class_id, "self object name: ", ruleset.nodes[space.obj_class_id].name)
     print("self x: ", space.col, "self y: ", space.row)
-    space.obj_name = ruleset.nodes[space.obj_class_id].name
+    space.obj_name = ruleset.nodes[space.obj_class_id].name # set the grid object name from the config file 
     print("self object name: ", space.obj_name)
     print("limits: ", ruleset.nodes[space.obj_class_id].limits)
     print("===================================")
     
     # fill the limit dictionary counter with each limit and its number of limited objects in its range to 0
+    # should be correct even for updating an object from update_tuio_object - the logic is erasing the object and then adding it again
     for limit in ruleset.nodes[space.obj_class_id].limits:
         space.obj_limits.update({limit.blockType: 0}) # add the limit to the space    
 
@@ -99,21 +104,31 @@ def draw(space: MySpace):
     for col in range(start_col,end_col):
         for row in range(start_row,end_row):
             searched_space = mygrid.m_grid[col][row]
-            # iterate through limits
+            # iterate through limits of the space object
             for limit in ruleset.nodes[space.obj_class_id].limits:
                 if (searched_space.obj_name == limit.blockType): # if the search space (object) is the same as one of the limits
-                    space.obj_limits.update({limit.blockType: space.obj_limits[limit.blockType] + 1}) # increment the limit counter
+                    space.obj_limits.update({limit.blockType: space.obj_limits[limit.blockType] + 1}) # increment the limit counter of the space object
 
             # check if space (current object - not the searched one) meets the limits of the search_space 
             for limit in ruleset.nodes[searched_space.obj_class_id].limits: # iterate through limits of the searched space
                 tmp_row = abs(searched_space.row - space.row)
                 tmp_col = abs(searched_space.col - space.col)
-                if tmp_row > ruleset.nodes[searched_space.obj_class_id].range or tmp_col > ruleset.nodes[searched_space.obj_class_id].range: # if the current object isnt in range of the searched object
-                    continue
                 if (limit.blockType == space.obj_name): # if the limit is the same as the current object
-                    searched_space.obj_limits[space.obj_name] = searched_space.obj_limits[space.obj_name] + 1 # increment the limit counter
+                    if tmp_row > ruleset.nodes[searched_space.obj_class_id].range or tmp_col > ruleset.nodes[searched_space.obj_class_id].range: # if the current object isnt in range of the searched object
+                        if(searched_space.obj_limits[space.obj_name] > 0): # if the limit counter is greater than 0 (keep it from being negative)
+                            searched_space.obj_limits[space.obj_name] = searched_space.obj_limits[space.obj_name] - 1 # decrement the limit counter
+                    else:
+                        searched_space.obj_limits[space.obj_name] = searched_space.obj_limits[space.obj_name] + 1 # increment the limit counter
+
                     if (searched_space.obj_limits[space.obj_name] >= limit.lowerLimit and searched_space.obj_limits[space.obj_name] <= limit.upperLimit):
-                        plocha.itemconfig(searched_space.image,fill="green")
+                        plocha.delete(searched_space.fill)
+                        searched_space.fill = plocha.create_rectangle(searched_space.top_l,searched_space.top_r,searched_space.bot_l,searched_space.bot_r,fill="green")
+                        #plocha.itemconfig(searched_space.image,fill="green")
+                    else:
+                        #plocha.itemconfig(searched_space.image,fill="red")
+                        plocha.delete(searched_space.fill)
+                        searched_space.fill = plocha.create_rectangle(searched_space.top_l,searched_space.top_r,searched_space.bot_l,searched_space.bot_r,fill="red")
+
     isLimitOk = True
     # iterate through limits of the current object and check if they are met
     for limit, count in space.obj_limits.items():
@@ -137,6 +152,32 @@ def draw(space: MySpace):
 #
 #--------------------------------------------------------------------
 
+# decrement the limit counter of all objects in the range of the erased object
+# def erase_helper(space: MySpace):
+#     # calculate start/end col/row for for cycles - remain in bounds of grid
+#     start_col = int(max(0,space.col - ruleset.nodes[space.obj_class_id].range))
+#     end_row = int(min((h/magic_number)-1,space.col + ruleset.nodes[space.obj_class_id].range))
+#     start_row = int(max(0,space.row - ruleset.nodes[space.obj_class_id].range))
+#     end_col = int(min((w/magic_number)-1,space.row + ruleset.nodes[space.obj_class_id].range))
+
+#     # iterate through rows and columns
+#     for col in range(start_col,end_col):
+#         for row in range(start_row,end_row):
+#             searched_space = mygrid.m_grid[col][row]
+#             for limit in ruleset.nodes[searched_space.obj_class_id].limits: # iterate through limits of the searched space
+#                 tmp_row = abs(searched_space.row - space.row)
+#                 tmp_col = abs(searched_space.col - space.col)
+#                 if tmp_row > ruleset.nodes[searched_space.obj_class_id].range or tmp_col > ruleset.nodes[searched_space.obj_class_id].range: # if the current object isnt in range of the searched object
+#                     continue
+#                 if (limit.blockType == space.obj_name): # if the limit is the same as the current object
+#                     searched_space.obj_limits[space.obj_name] = searched_space.obj_limits[space.obj_name] + 1 # increment the limit counter
+#                     if (searched_space.obj_limits[space.obj_name] >= limit.lowerLimit and searched_space.obj_limits[space.obj_name] <= limit.upperLimit):
+#                         plocha.itemconfig(searched_space.image,fill="green")
+
+
+#------------------------------------------------------------
+#
+#------------------------------------------------------------
 class MyObject():
     def __init__(self,class_id,x,y):
         self.class_id = class_id
