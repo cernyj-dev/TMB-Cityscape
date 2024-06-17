@@ -34,7 +34,7 @@
       "limits": [
         {
           "blockType": "Lake",
-          "upperLimit": -1,
+          "upperLimit": 20,
           "lowerLimit": 1
         }
       ],
