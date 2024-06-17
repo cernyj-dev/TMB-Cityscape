@@ -4,14 +4,14 @@
     {
       "name": "Park",
       "qrID": 1,
-	  "ID": 0,
+      "ID": 0,
       "limits": [],
       "range": 2
     },
     {
       "name": "Living quarters",
       "qrID": 2,
-	  "ID": 1,
+      "ID": 1,
       "limits": [
         {
           "blockType": "Park",
@@ -24,13 +24,13 @@
           "lowerLimit": 1
         }
       ],
-      "range": -1,
+      "range": 5,
       "colour": "#00F"
     },
     {
       "name": "Fire station",
       "qrID": 3,
-	  "ID": 2,
+      "ID": 2,
       "limits": [
         {
           "blockType": "Lake",
@@ -40,12 +40,12 @@
       ],
       "range": 3
     },
-	{
-	  "name": "Lake",
-	  "qrID": 4,
-	  "ID": 3,
-	  "limits": [],
-	  "range": 3
-	}
+    {
+      "name": "Lake",
+      "qrID": 4,
+      "ID": 3,
+      "limits": [],
+      "range": 3
+    }
   ]
 }

@@ -13,7 +13,7 @@ from helper_files.ConfigParser import Ruleset
 #   scale - relative scale of shown objects
 w=640
 h=480
-scale = 15
+scale = 15 #jen pro ukazovatko
 magic_number = 40
 config_path = 'helper_files/config.json'
 
@@ -27,6 +27,9 @@ plocha.pack()
 # Grid vizualization 
 #
 #------------------------------------------------------------
+
+
+
 class MySpace():
     def __init__(self,x1,y1,x2,y2,col,row):
         self.top_l = x1
@@ -35,6 +38,8 @@ class MySpace():
         self.bot_r = y2
         self.col = col
         self.row = row
+        self.obj_class_id = -1
+        self.obj_name = ""
         self.image = plocha.create_rectangle(x1,y1,x2,y2)
         plocha.create_text(x1+20,y1+20,text='{},{}'.format(col,row),font="Arial 10")
 
@@ -43,30 +48,15 @@ class MySpace():
             return NotImplemented
         return self.top_l == other.top_l and self.bot_r == other.bot_r
     
-    def Fill(self, curr_obj):
-        draw(self, curr_obj)
+    def Fill(self):
+        draw(self)
     def Erase(self):
         plocha.delete(self.fill)
 
+#--------------------------------------------------------------------
+#
+#--------------------------------------------------------------------
 
-def draw(space: MySpace, curr_obj):
-    # TODO get the QR ID
-    #curr_id = curr_obj.class_id
-
-    # TODO get the corresponding Node Limits for ruleset
-    #print("Current object ID: ", curr_obj.class_id, "Currect object name: ", ruleset[curr_obj.class_id].name)
-    print("Current object ID: ", curr_obj.class_id)
-    print("Current object name: ", ruleset.nodes[curr_obj.class_id])
-
-    # TODO probable add the myObjects dictionary as an argument
-    # TODO iterate over the limits and nodes
-    # TODO check if the object's limits are completed by this current node
-    isLimitOk = False
-    if (isLimitOk):
-      space.fill = plocha.create_rectangle(space.top_l,space.top_r,space.bot_l,space.bot_r,fill="green")
-    else:
-      space.fill = plocha.create_rectangle(space.top_l,space.top_r,space.bot_l,space.bot_r,fill="red")
-    return
 class MyGrid():
     def __init__(self):
         self.m_grid = []
@@ -78,18 +68,54 @@ class MyGrid():
                 self.m_grid[col_cnt].append(MySpace(i,j,i+magic_number,j+magic_number,col_cnt,row_cnt))
                 row_cnt = row_cnt+1
             col_cnt = col_cnt+1        
+mygrid = MyGrid()
 #--------------------------------------------------------------------
 #
 #--------------------------------------------------------------------
+
+def draw(space: MySpace):
+    # TODO get the QR ID
+    #curr_id = curr_obj.class_id
+
+    # TODO get the corresponding Node Limits for ruleset
+    print("===================================")
+    print("self object ID: ", space.obj_class_id, "self object name: ", ruleset.nodes[space.obj_class_id].name)
+    print("self x: ", space.col, "self y: ", space.row)
+    space.obj_name = ruleset.nodes[space.obj_class_id].name
+    print("self object name: ", space.obj_name)
+    print("limits: ", ruleset.nodes[space.obj_class_id].limits)
+    print("===================================")
+
+
+    # Iterate through all the limits
+    #for limit in ruleset.limits:
+        # iterate through the rows
+        
+    # iterate through the columns
+    # get the range of each node and check if the object is in the range    
+
+
+    # TODO iterate over the limits and nodes
+    # TODO check if the object's limits are completed by this current node
+    isLimitOk = False
+    if (isLimitOk):
+      space.fill = plocha.create_rectangle(space.top_l,space.top_r,space.bot_l,space.bot_r,fill="green")
+    else:
+      space.fill = plocha.create_rectangle(space.top_l,space.top_r,space.bot_l,space.bot_r,fill="red")
+    return
+#--------------------------------------------------------------------
+#
+#--------------------------------------------------------------------
+
 class MyObject():
     def __init__(self,class_id,x,y):
         self.class_id = class_id
         self.last_x = x
         self.last_y = y
 
-        self.myImage = []
-        self.myImage.append(plocha.create_rectangle(x-scale,y-scale,x+scale,y+scale,fill=""))
-        self.myImage.append(plocha.create_oval(x-4,y-4,x+4,y+4,fill="red"))
+        self.myImage = [] #pro vsechny objekty - ukazovatko i objekt
+        self.myImage.append(plocha.create_rectangle(x-scale,y-scale,x+scale,y+scale,fill="")) #ukazovatko
+        self.myImage.append(plocha.create_oval(x-4,y-4,x+4,y+4,fill="red")) #ukazovatko
 
     def move(self,x,y):
         for i in self.myImage:
@@ -100,7 +126,7 @@ class MyObject():
 # Dictionary for all obejcts on screen
 myObjects = {}
 
-mygrid = MyGrid()
+
 
 # obj.position - goes from 0 to 1, 0 being total left/top and 1 being total right/bottom of camera
 # We use Decimal for more precise calculation of floats.
@@ -112,10 +138,10 @@ class MyListener(TuioListener):
         y= Decimal(y)
         actual_x=Decimal(x*w)
         actual_y=Decimal(y*h)
-
-        new_obj = MyObject(obj.class_id,actual_x,actual_y)
-        myObjects.update({obj.session_id : new_obj})
-        mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)].Fill(new_obj) # Gonna need to pass through the obj.session_id?
+        
+        myObjects.update({obj.session_id : MyObject(obj.class_id,actual_x,actual_y)})
+        mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)].object_class_id = obj.class_id #updating the object class id
+        mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)].Fill() # calling Fill on MySpace object, which holds x,y,ID of the object
 
     def update_tuio_object(self, obj):
         x,y = obj.position
@@ -135,8 +161,10 @@ class MyListener(TuioListener):
 
 
         if (not mygrid.m_grid[floor(lx/magic_number)][floor(ly/magic_number)].__eq__(mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)])):
+            mygrid.m_grid[floor(lx/magic_number)][floor(ly/magic_number)].obj_class_id = -1
             mygrid.m_grid[floor(lx/magic_number)][floor(ly/magic_number)].Erase()
-            mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)].Fill(MyObject(obj.class_id,actual_x,actual_y))
+            mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)].obj_class_id = obj.class_id #updating the object class id
+            mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)].Fill() # calling Fill on MySpace object, which holds x,y,ID of the object
 
         myObjects[obj.session_id].last_x = actual_x
         myObjects[obj.session_id].last_y = actual_y
