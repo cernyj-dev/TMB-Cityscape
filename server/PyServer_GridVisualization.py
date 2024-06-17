@@ -79,15 +79,17 @@ mygrid = MyGrid()
 #--------------------------------------------------------------------
 #
 #--------------------------------------------------------------------
-
+# TODO: kdyz se Lake posune dostatecne k Fire Station, tak FS zezelena
+#       kdyz se Lake posune zpet, tak FS nezcervena - teprve az se s FS zase pohne
+# Napad: Lake nema limits, proto se to kurvi v druhem for cyklu prochazejici limits
 def draw(space: MySpace): # space is the object that is being moved
-    print("===================================")
-    print("self object ID: ", space.obj_class_id, "self object name: ", ruleset.nodes[space.obj_class_id].name)
-    print("self x: ", space.col, "self y: ", space.row)
+    #print("===================================")
+    #print("self object ID: ", space.obj_class_id, "self object name: ", ruleset.nodes[space.obj_class_id].name)
+    #print("self x: ", space.col, "self y: ", space.row)
     space.obj_name = ruleset.nodes[space.obj_class_id].name # set the grid object name from the config file 
-    print("self object name: ", space.obj_name)
-    print("limits: ", ruleset.nodes[space.obj_class_id].limits)
-    print("===================================")
+    #print("self object name: ", space.obj_name)
+    #print("limits: ", ruleset.nodes[space.obj_class_id].limits)
+    #print("===================================")
     
     # fill the limit dictionary counter with each limit and its number of limited objects in its range to 0
     # should be correct even for updating an object from update_tuio_object - the logic is erasing the object and then adding it again
@@ -109,25 +111,30 @@ def draw(space: MySpace): # space is the object that is being moved
                 if (searched_space.obj_name == limit.blockType): # if the search space (object) is the same as one of the limits
                     space.obj_limits.update({limit.blockType: space.obj_limits[limit.blockType] + 1}) # increment the limit counter of the space object
 
-            # check if space (current object - not the searched one) meets the limits of the search_space 
+            # iterate through limits of the searched space object - TO CHANGE THE COLOR OF OBJECTS OTHER THAN THE CURRENT SPACE OBJECT
             for limit in ruleset.nodes[searched_space.obj_class_id].limits: # iterate through limits of the searched space
-                tmp_row = abs(searched_space.row - space.row)
-                tmp_col = abs(searched_space.col - space.col)
+                tmp_row_range = abs(searched_space.row - space.row)
+                tmp_col_range = abs(searched_space.col - space.col)
                 if (limit.blockType == space.obj_name): # if the limit is the same as the current object
-                    if tmp_row > ruleset.nodes[searched_space.obj_class_id].range or tmp_col > ruleset.nodes[searched_space.obj_class_id].range: # if the current object isnt in range of the searched object
+                    if tmp_row_range > ruleset.nodes[searched_space.obj_class_id].range or tmp_col_range > ruleset.nodes[searched_space.obj_class_id].range: # if the current object isnt in range of the searched object
                         if(searched_space.obj_limits[space.obj_name] > 0): # if the limit counter is greater than 0 (keep it from being negative)
                             searched_space.obj_limits[space.obj_name] = searched_space.obj_limits[space.obj_name] - 1 # decrement the limit counter
                     else:
                         searched_space.obj_limits[space.obj_name] = searched_space.obj_limits[space.obj_name] + 1 # increment the limit counter
 
-                    if (searched_space.obj_limits[space.obj_name] >= limit.lowerLimit and searched_space.obj_limits[space.obj_name] <= limit.upperLimit):
+                    if (limit.upperLimit >= searched_space.obj_limits[space.obj_name] >= limit.lowerLimit):
+                        print("searched object ID: ", searched_space.obj_class_id, ", within limits: ", limit.lowerLimit, " - ", limit.upperLimit)
                         plocha.delete(searched_space.fill)
                         searched_space.fill = plocha.create_rectangle(searched_space.top_l,searched_space.top_r,searched_space.bot_l,searched_space.bot_r,fill="green")
                         #plocha.itemconfig(searched_space.image,fill="green")
                     else:
                         #plocha.itemconfig(searched_space.image,fill="red")
+                        print("searched object ID: ", searched_space.obj_class_id, ", NOT within limits: ", limit.lowerLimit, " - ", limit.upperLimit)
+
                         plocha.delete(searched_space.fill)
                         searched_space.fill = plocha.create_rectangle(searched_space.top_l,searched_space.top_r,searched_space.bot_l,searched_space.bot_r,fill="red")
+                    print("Limit: ", limit.blockType, " - ", searched_space.obj_limits[space.obj_name])
+                    print("------------------------------------")
 
     isLimitOk = True
     # iterate through limits of the current object and check if they are met
@@ -151,28 +158,6 @@ def draw(space: MySpace): # space is the object that is being moved
 #--------------------------------------------------------------------
 #
 #--------------------------------------------------------------------
-
-# decrement the limit counter of all objects in the range of the erased object
-# def erase_helper(space: MySpace):
-#     # calculate start/end col/row for for cycles - remain in bounds of grid
-#     start_col = int(max(0,space.col - ruleset.nodes[space.obj_class_id].range))
-#     end_row = int(min((h/magic_number)-1,space.col + ruleset.nodes[space.obj_class_id].range))
-#     start_row = int(max(0,space.row - ruleset.nodes[space.obj_class_id].range))
-#     end_col = int(min((w/magic_number)-1,space.row + ruleset.nodes[space.obj_class_id].range))
-
-#     # iterate through rows and columns
-#     for col in range(start_col,end_col):
-#         for row in range(start_row,end_row):
-#             searched_space = mygrid.m_grid[col][row]
-#             for limit in ruleset.nodes[searched_space.obj_class_id].limits: # iterate through limits of the searched space
-#                 tmp_row = abs(searched_space.row - space.row)
-#                 tmp_col = abs(searched_space.col - space.col)
-#                 if tmp_row > ruleset.nodes[searched_space.obj_class_id].range or tmp_col > ruleset.nodes[searched_space.obj_class_id].range: # if the current object isnt in range of the searched object
-#                     continue
-#                 if (limit.blockType == space.obj_name): # if the limit is the same as the current object
-#                     searched_space.obj_limits[space.obj_name] = searched_space.obj_limits[space.obj_name] + 1 # increment the limit counter
-#                     if (searched_space.obj_limits[space.obj_name] >= limit.lowerLimit and searched_space.obj_limits[space.obj_name] <= limit.upperLimit):
-#                         plocha.itemconfig(searched_space.image,fill="green")
 
 
 #------------------------------------------------------------
@@ -203,7 +188,7 @@ myObjects = {}
 # We use Decimal for more precise calculation of floats.
 class MyListener(TuioListener):
     def add_tuio_object(self,obj):
-        print("detected a new object", obj.class_id, " on pos ",obj.position, " with session id : ",obj.session_id)
+        #print("detected a new object", obj.class_id, " on pos ",obj.position, " with session id : ",obj.session_id)
         x,y = obj.position
         x= Decimal(x)
         y= Decimal(y)
@@ -240,7 +225,7 @@ class MyListener(TuioListener):
         myObjects[obj.session_id].last_y = actual_y
 
     def remove_tuio_object(self, obj):
-        print("Object " ,obj.session_id, " of class ",obj.class_id," was deleted.")
+        #print("Object " ,obj.session_id, " of class ",obj.class_id," was deleted.")
         lx= myObjects[obj.session_id].last_x
         ly= myObjects[obj.session_id].last_y
         mygrid.m_grid[floor(lx/magic_number)][floor(ly/magic_number)].Erase()
