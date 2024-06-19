@@ -86,6 +86,7 @@ mygrid = MyGrid()
 def draw(space: MySpace): # space is the object that is being moved
     space.obj_name = ruleset.nodes[space.obj_class_id].name # set the grid object name from the config file 
     space_has_limits = False
+
     if(ruleset.nodes[space.obj_class_id].limits != []):
         space_has_limits = True    
     # fill the limit dictionary counter with each limit and its number of limited objects in its range to 0
@@ -94,57 +95,58 @@ def draw(space: MySpace): # space is the object that is being moved
         space.obj_limits.update({limit.blockType: 0}) # add the limit to the space    
     # calculate start/end col/row for for cycles - remain in bounds of grid
     start_col = int(max(0,space.col - ruleset.nodes[space.obj_class_id].range))
-    end_col = int(min((h/magic_number),space.col + ruleset.nodes[space.obj_class_id].range))
+    end_col = int(min((w/magic_number),space.col + ruleset.nodes[space.obj_class_id].range + 1))
     start_row = int(max(0,space.row - ruleset.nodes[space.obj_class_id].range))
-    end_row = int(min((w/magic_number),space.row + ruleset.nodes[space.obj_class_id].range))
+    end_row = int(min((h/magic_number),space.row + ruleset.nodes[space.obj_class_id].range + 1))
+
     # iterate through rows and columns
     for col in range(start_col,end_col):
         for row in range(start_row,end_row):
-            if(col == space.col and row == space.row): # if the searched space is the same as the current space
+            # if the searched space is the same as the current space
+            if(col == space.col and row == space.row): 
                 continue
-            if(mygrid.m_grid[col][row].obj_class_id == -1): # if the searched space is empty
+            # if the searched space is empty
+            if(mygrid.m_grid[col][row].obj_class_id == -1): 
                 continue
+
+            print("-")
             searched_space = mygrid.m_grid[col][row]
-            # iterate through limits of the space object
-            if(space_has_limits): # if the space object has limits (is in the config file
-                for limit in ruleset.nodes[space.obj_class_id].limits: # PARK NESPUSTI
+
+            # if the space object has limits (is in the config file)
+            if(space_has_limits): 
+                # iterate through limits of the space object
+                for limit in ruleset.nodes[space.obj_class_id].limits:
                     if (searched_space.obj_name == limit.blockType): # if the search space (object) is the same as one of the limits
                         space.obj_limits.update({limit.blockType: space.obj_limits[limit.blockType] + 1}) # increment the limit counter of the space object
 
             # if the searched space doesnt have any limits - no need to change the count in them
             if(ruleset.nodes[searched_space.obj_class_id].limits == []):
                 continue
-            # iterate through limits of the searched space object - TO CHANGE THE COLOR OF OBJECTS OTHER THAN THE CURRENT SPACE OBJECT
-            print("Searched object ID: ", searched_space.obj_class_id, ", row: ", searched_space.row, ", col: ", searched_space.col)
-            for limit in ruleset.nodes[searched_space.obj_class_id].limits: # iterate through limits of the searched space
-                tmp_row_range = abs(searched_space.row - space.row)
-                tmp_col_range = abs(searched_space.col - space.col)
-                #print("searched object ID: ", searched_space.obj_class_id, ", row range: ", tmp_row_range, ", col range: ", tmp_col_range)
-                #print("Limit: ", limit.blockType, " - ", searched_space.obj_limits[space.obj_name])
-                if (limit.blockType == space.obj_name): # if the limit is the same as the current object
-                    if tmp_row_range > ruleset.nodes[searched_space.obj_class_id].range or tmp_col_range > ruleset.nodes[searched_space.obj_class_id].range: # if the current object isnt in range of the searched object
-                        if(searched_space.obj_limits[space.obj_name] > 0): # if the limit counter is greater than 0 (keep it from being negative)
-                            searched_space.obj_limits[space.obj_name] = searched_space.obj_limits[space.obj_name] - 1 # decrement the limit counter
-                    else:
-                        searched_space.obj_limits[space.obj_name] = searched_space.obj_limits[space.obj_name] + 1 # increment the limit counter
 
-                    if (limit.upperLimit >= searched_space.obj_limits[space.obj_name] >= limit.lowerLimit):
-                        print("searched object ID: ", searched_space.obj_class_id, ", within limits: ", limit.lowerLimit, " - ", limit.upperLimit)
+            #print("Searched object ID: ", searched_space.obj_class_id, ", row: ", searched_space.row, ", col: ", searched_space.col)
+
+            # iterate through limits of the searched space object - TO CHANGE THE COLOR OF OBJECTS OTHER THAN THE CURRENT SPACE OBJECT
+            for limit in ruleset.nodes[searched_space.obj_class_id].limits: 
+
+                # if the limit is the same as the current object
+                if (limit.blockType == space.obj_name): 
+                    searched_space.obj_limits[space.obj_name] = searched_space.obj_limits[space.obj_name] + 1 # increment the limit counter
+                    print(space.obj_name, "| ", searched_space.obj_name, ": ","Limit: ", limit.blockType, " - ", searched_space.obj_limits[space.obj_name])
+
+                    if (searched_space.obj_limits[space.obj_name] >= limit.lowerLimit):
+                        #print("searched object ID: ", searched_space.obj_class_id, ", within limits: ", limit.lowerLimit, " - ", limit.upperLimit)
+                        #plocha.itemconfig(searched_space.image,fill="green")
                         plocha.delete(searched_space.fill)
                         searched_space.fill = plocha.create_rectangle(searched_space.top_l,searched_space.top_r,searched_space.bot_l,searched_space.bot_r,fill="green")
-                        #plocha.itemconfig(searched_space.image,fill="green")
                     else:
                         #plocha.itemconfig(searched_space.image,fill="red")
-                        print("searched object ID: ", searched_space.obj_class_id, ", NOT within limits: ", limit.lowerLimit, " - ", limit.upperLimit)
-
                         plocha.delete(searched_space.fill)
                         searched_space.fill = plocha.create_rectangle(searched_space.top_l,searched_space.top_r,searched_space.bot_l,searched_space.bot_r,fill="red")
-                    print("Limit: ", limit.blockType, " - ", searched_space.obj_limits[space.obj_name])
                     print("------------------------------------")
 
     isLimitOk = True
     # iterate through limits of the current object and check if they are met
-    if(ruleset.nodes[space.obj_class_id].limits != []):
+    if(space_has_limits):
         for limit, count in space.obj_limits.items():
             limit_ok = False
             for node_limit in ruleset.nodes[space.obj_class_id].limits:
