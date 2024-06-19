@@ -54,7 +54,7 @@ class MySpace():
     def Erase(self):
         self.obj_class_id = -1
         self.obj_name = ""
-
+        # TODO: Iterate through all objects in range and decrement their limits
         
 
 
