@@ -145,8 +145,9 @@ def draw(space: MySpace): # space is the object that is being moved
                     print("------------------------------------")
 
     isLimitOk = True
-    # iterate through limits of the current object and check if they are met
+    # if the current object has limits
     if(space_has_limits):
+        # iterate through limits of the current object and check if they are met
         for limit, count in space.obj_limits.items():
             limit_ok = False
             for node_limit in ruleset.nodes[space.obj_class_id].limits:
