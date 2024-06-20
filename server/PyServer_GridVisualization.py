@@ -55,7 +55,41 @@ class MySpace():
         self.obj_class_id = -1
         self.obj_name = ""
         # TODO: Iterate through all objects in range and decrement their limits
-        
+        for col in range(0, w//magic_number):
+            for row in range(0, h//magic_number):
+                # if the searched space is the same as the current space
+                if(col == self.col and row == self.row): 
+                    continue
+                # if the searched self is empty
+                if(mygrid.m_grid[col][row].obj_class_id == -1): 
+                    continue
+
+                searched_self = mygrid.m_grid[col][row]
+
+                col_rel = abs(self.col - searched_self.col)
+                row_rel = abs(self.row - searched_self.row)
+                 
+                if(col_rel <= ruleset.nodes[searched_self.obj_class_id].range) and (row_rel <= ruleset.nodes[searched_self.obj_class_id].range):
+                    limit_counter = 0
+                    # iterate through limits of the searched space object - TO CHANGE THE COLOR OF OBJECTS OTHER THAN THE CURRENT SPACE OBJECT
+                    for limit in ruleset.nodes[searched_self.obj_class_id].limits: 
+                        # if the limit is the same as the current object
+                        if (limit.blockType == self.obj_name): 
+                            if(searched_self.obj_limits[limit.blockType] > 0):
+                                searched_self.obj_limits[limit.blockType] -= 1 # increment the limit counter
+                            if(searched_self.obj_limits[limit.blockType] == 0):
+                                searched_self.obj_limits.pop(limit.blockType)
+                                    
+                            if (searched_self.obj_limits[limit.blockType] >= limit.lowerLimit):
+                                limit_counter += 1 # tohle ma oznacovat pocet splnenych pravidel
+
+                    if (limit_counter == len(ruleset.nodes[searched_self.obj_class_id].limits)): # pokud je pocet splnenych pravidel stejne dlouhy jako pocet pravidel - zelena                      
+                        plocha.delete(searched_self.fill)
+                        searched_self.fill = plocha.create_rectangle(searched_self.top_l,searched_self.top_r,searched_self.bot_l,searched_self.bot_r,fill="green")
+                    else:
+                        plocha.delete(searched_self.fill)
+                        searched_self.fill = plocha.create_rectangle(searched_self.top_l,searched_self.top_r,searched_self.bot_l,searched_self.bot_r,fill="red")
+
 
 
         plocha.delete(self.fill)
@@ -93,11 +127,6 @@ def draw(space: MySpace): # space is the object that is being moved
     # should be correct even for updating an object from update_tuio_object - the logic is erasing the object and then adding it again
     for limit in ruleset.nodes[space.obj_class_id].limits:
         space.obj_limits.update({limit.blockType: 0}) # add the limit to the space    
-    # calculate start/end col/row for for cycles - remain in bounds of grid
-    #start_col = int(max(0,space.col - ruleset.nodes[space.obj_class_id].range))
-    #end_col = int(min((w/magic_number),space.col + ruleset.nodes[space.obj_class_id].range + 1))
-    #start_row = int(max(0,space.row - ruleset.nodes[space.obj_class_id].range))
-    #end_row = int(min((h/magic_number),space.row + ruleset.nodes[space.obj_class_id].range + 1))
 
     # iterate through rows and columns
     for col in range(0, w//magic_number):
@@ -114,8 +143,6 @@ def draw(space: MySpace): # space is the object that is being moved
             col_rel = abs(space.col - searched_space.col)
             row_rel = abs(space.row - searched_space.row)
 
-
-
             # THE CURRENT OBJECT SECTION --------------------------------
             # if the searched space object is within the range of the current space object
             if(space_has_limits and (col_rel <= ruleset.nodes[space.obj_class_id].range) and (row_rel <= ruleset.nodes[space.obj_class_id].range)): 
@@ -128,8 +155,6 @@ def draw(space: MySpace): # space is the object that is being moved
             if(ruleset.nodes[searched_space.obj_class_id].limits == []):
                 continue
 
-            #print("Searched object ID: ", searched_space.obj_class_id, ", row: ", searched_space.row, ", col: ", searched_space.col)
-
             # THE OTHER OBJECT SECTION --------------------------------
             # if the current space object is within the range of the searched space object
             if(col_rel <= ruleset.nodes[searched_space.obj_class_id].range) and (row_rel <= ruleset.nodes[searched_space.obj_class_id].range):
@@ -139,6 +164,7 @@ def draw(space: MySpace): # space is the object that is being moved
                     # if the limit is the same as the current object
                     if (limit.blockType == space.obj_name): 
                         searched_space.obj_limits[limit.blockType] += 1 # increment the limit counter
+
                         if (searched_space.obj_limits[limit.blockType] >= limit.lowerLimit):
                             limit_counter += 1 # tohle ma oznacovat pocet splnenych pravidel
 
