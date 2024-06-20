@@ -112,6 +112,7 @@ def draw(space: MySpace): # space is the object that is being moved
             print("-")
             searched_space = mygrid.m_grid[col][row]
 
+            # THE CURRENT OBJECT SECTION --------------------------------
             # if the space object has limits (is in the config file)
             if(space_has_limits): 
                 # iterate through limits of the space object
@@ -125,6 +126,7 @@ def draw(space: MySpace): # space is the object that is being moved
 
             #print("Searched object ID: ", searched_space.obj_class_id, ", row: ", searched_space.row, ", col: ", searched_space.col)
 
+            # THE OTHER OBJECT SECTION --------------------------------
             # iterate through limits of the searched space object - TO CHANGE THE COLOR OF OBJECTS OTHER THAN THE CURRENT SPACE OBJECT
             for limit in ruleset.nodes[searched_space.obj_class_id].limits: 
 
