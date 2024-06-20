@@ -144,7 +144,10 @@ def draw(space: MySpace): # space is the object that is being moved
                 # iterate through limits of the space object
                 for limit in ruleset.nodes[space.obj_class_id].limits:
                     if (searched_space.obj_name == limit.blockType): # if the search space (object) is the same as one of the limits
-                        space.obj_limits.update({limit.blockType: space.obj_limits[limit.blockType] + 1}) # increment the limit counter of the space object
+                        if(limit.blockType not in space.obj_limits): # if the limit is not in the space object limits
+                            space.obj_limits[limit.blockType] = 1
+                        else:
+                            space.obj_limits[limit.blockType] += 1 # increment the limit counter of the space object
 
             # if the searched space doesnt have any limits - no need to change the count in them
             if(ruleset.nodes[searched_space.obj_class_id].limits == []):
@@ -158,7 +161,13 @@ def draw(space: MySpace): # space is the object that is being moved
                 for limit in ruleset.nodes[searched_space.obj_class_id].limits: 
                     # if the limit is the same as the current object
                     if (limit.blockType == space.obj_name): 
-                        searched_space.obj_limits[limit.blockType] += 1 # increment the limit counter
+                        if(limit.blockType not in space.obj_limits): # if the limit is not in the space object limits
+
+                            searched_space.obj_limits[limit.blockType] = 1
+
+                        else:
+
+                            searched_space.obj_limits[limit.blockType] += 1
 
                         if (searched_space.obj_limits[limit.blockType] >= limit.lowerLimit):
                             limit_counter += 1 # tohle ma oznacovat pocet splnenych pravidel
