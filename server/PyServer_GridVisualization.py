@@ -133,23 +133,28 @@ def draw(space: MySpace): # space is the object that is being moved
             # THE OTHER OBJECT SECTION --------------------------------
             # if the current space object is within the range of the searched space object
             if(col_rel <= ruleset.nodes[searched_space.obj_class_id].range) and (row_rel <= ruleset.nodes[searched_space.obj_class_id].range):
+                limit_counter = 0
                 # iterate through limits of the searched space object - TO CHANGE THE COLOR OF OBJECTS OTHER THAN THE CURRENT SPACE OBJECT
                 for limit in ruleset.nodes[searched_space.obj_class_id].limits: 
                     # if the limit is the same as the current object
                     if (limit.blockType == space.obj_name): 
                         searched_space.obj_limits[space.obj_name] = searched_space.obj_limits[space.obj_name] + 1 # increment the limit counter
-                        print(space.obj_name, "| ", searched_space.obj_name, ": ","Limit: ", limit.blockType, " - ", searched_space.obj_limits[space.obj_name])
-
+                        
                         if (searched_space.obj_limits[space.obj_name] >= limit.lowerLimit):
-                            #print("searched object ID: ", searched_space.obj_class_id, ", within limits: ", limit.lowerLimit, " - ", limit.upperLimit)
-                            #plocha.itemconfig(searched_space.image,fill="green")
-                            plocha.delete(searched_space.fill)
-                            searched_space.fill = plocha.create_rectangle(searched_space.top_l,searched_space.top_r,searched_space.bot_l,searched_space.bot_r,fill="green")
-                        else:
-                            #plocha.itemconfig(searched_space.image,fill="red")
-                            plocha.delete(searched_space.fill)
-                            searched_space.fill = plocha.create_rectangle(searched_space.top_l,searched_space.top_r,searched_space.bot_l,searched_space.bot_r,fill="red")
-                        print("------------------------------------")
+                            limit_counter += 1
+                print("Current object ID: ", space.obj_class_id, ", row: ", space.row, ", col: ", space.col)                            
+                print("Searched object ID: ", searched_space.obj_class_id, ", row: ", searched_space.row, ", col: ", searched_space.col)
+                print("Limit counter: ", limit_counter)
+                print("Limit length", len(ruleset.nodes[searched_space.obj_class_id].limits))
+                print("------------------------------")
+                if (limit_counter == len(ruleset.nodes[searched_space.obj_class_id].limits)):                        
+                    plocha.delete(searched_space.fill)
+                    searched_space.fill = plocha.create_rectangle(searched_space.top_l,searched_space.top_r,searched_space.bot_l,searched_space.bot_r,fill="green")
+                else:
+                    plocha.delete(searched_space.fill)
+                    searched_space.fill = plocha.create_rectangle(searched_space.top_l,searched_space.top_r,searched_space.bot_l,searched_space.bot_r,fill="red")
+
+
 
     isLimitOk = True
     # if the current object has limits
@@ -159,7 +164,7 @@ def draw(space: MySpace): # space is the object that is being moved
             limit_ok = False
             for node_limit in ruleset.nodes[space.obj_class_id].limits:
                 if node_limit.blockType == limit:
-                    if node_limit.lowerLimit <= count <= node_limit.upperLimit:
+                    if node_limit.lowerLimit <= count:
                         limit_ok = True
                         break
             if not limit_ok:
