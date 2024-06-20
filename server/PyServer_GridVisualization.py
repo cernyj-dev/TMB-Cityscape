@@ -74,11 +74,11 @@ class MySpace():
                         if (limit.blockType == self.obj_name): 
                             if(searched_self.obj_limits[limit.blockType] > 0):
                                 searched_self.obj_limits[limit.blockType] -= 1 # decrement the limit counter
-                            #if(searched_self.obj_limits[limit.blockType] == 0):
-                            #    searched_self.obj_limits.pop(limit.blockType)
-                            #else:    
-                            if (searched_self.obj_limits[limit.blockType] >= limit.lowerLimit):
-                                limit_counter += 1 # tohle ma oznacovat pocet splnenych pravidel
+                            if(searched_self.obj_limits[limit.blockType] == 0):
+                                searched_self.obj_limits.pop(limit.blockType)
+                            else:    
+                                if (searched_self.obj_limits[limit.blockType] >= limit.lowerLimit):
+                                    limit_counter += 1 # tohle ma oznacovat pocet splnenych pravidel
 
                     if (limit_counter != len(ruleset.nodes[searched_self.obj_class_id].limits)): # pokud je pocet splnenych pravidel stejne dlouhy jako pocet pravidel - zelena                      
                         plocha.delete(searched_self.fill)
@@ -109,9 +109,7 @@ mygrid = MyGrid()
 #
 #--------------------------------------------------------------------
 
-# TODO: kdyz se Lake posune dostatecne k Fire Station, tak FS zezelena
-#       kdyz se Lake posune zpet, tak FS nezcervena - teprve az se s FS zase pohne
-# Napad: Jakmile se Lake pohne, tak FS uz neni v jeho range (je jeden za hranici) - reseni bude muset bejt v erase
+# TODO: LQ, FS, Park - Park to prestane snimat, LQ zcervena, Park se opet objevi, ale LQ zustava cervene
 def draw(space: MySpace): # space is the object that is being moved
     space.obj_name = ruleset.nodes[space.obj_class_id].name # set the grid object name from the config file 
     space_has_limits = False
@@ -161,7 +159,7 @@ def draw(space: MySpace): # space is the object that is being moved
                 for limit in ruleset.nodes[searched_space.obj_class_id].limits: 
                     # if the limit is the same as the current object
                     if (limit.blockType == space.obj_name): 
-                        if(limit.blockType not in space.obj_limits): # if the limit is not in the space object limits
+                        if(limit.blockType not in searched_space.obj_limits): # if the limit is not in the space object limits
 
                             searched_space.obj_limits[limit.blockType] = 1
 
