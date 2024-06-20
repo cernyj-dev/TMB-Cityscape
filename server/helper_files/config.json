@@ -6,7 +6,7 @@
       "qrID": 1,
       "ID": 0,
       "limits": [],
-      "range": 2
+      "range": 3
     },
     {
       "name": "Living quarters",
@@ -28,7 +28,7 @@
       "colour": "#00F"
     },
     {
-      "name": "Fire station",
+      "name": "Fire Station",
       "qrID": 3,
       "ID": 2,
       "limits": [

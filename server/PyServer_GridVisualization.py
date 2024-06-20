@@ -138,16 +138,11 @@ def draw(space: MySpace): # space is the object that is being moved
                 for limit in ruleset.nodes[searched_space.obj_class_id].limits: 
                     # if the limit is the same as the current object
                     if (limit.blockType == space.obj_name): 
-                        searched_space.obj_limits[space.obj_name] = searched_space.obj_limits[space.obj_name] + 1 # increment the limit counter
-                        
-                        if (searched_space.obj_limits[space.obj_name] >= limit.lowerLimit):
-                            limit_counter += 1
-                print("Current object ID: ", space.obj_class_id, ", row: ", space.row, ", col: ", space.col)                            
-                print("Searched object ID: ", searched_space.obj_class_id, ", row: ", searched_space.row, ", col: ", searched_space.col)
-                print("Limit counter: ", limit_counter)
-                print("Limit length", len(ruleset.nodes[searched_space.obj_class_id].limits))
-                print("------------------------------")
-                if (limit_counter == len(ruleset.nodes[searched_space.obj_class_id].limits)):                        
+                        searched_space.obj_limits[limit.blockType] += 1 # increment the limit counter
+                        if (searched_space.obj_limits[limit.blockType] >= limit.lowerLimit):
+                            limit_counter += 1 # tohle ma oznacovat pocet splnenych pravidel
+
+                if (limit_counter == len(ruleset.nodes[searched_space.obj_class_id].limits)): # pokud je pocet splnenych pravidel stejne dlouhy jako pocet pravidel - zelena                      
                     plocha.delete(searched_space.fill)
                     searched_space.fill = plocha.create_rectangle(searched_space.top_l,searched_space.top_r,searched_space.bot_l,searched_space.bot_r,fill="green")
                 else:
