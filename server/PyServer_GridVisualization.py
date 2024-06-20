@@ -54,7 +54,6 @@ class MySpace():
     def Erase(self):
         self.obj_class_id = -1
         self.obj_name = ""
-        # TODO: Iterate through all objects in range and decrement their limits
         for col in range(0, w//magic_number):
             for row in range(0, h//magic_number):
                 # if the searched space is the same as the current space
@@ -76,20 +75,16 @@ class MySpace():
                         # if the limit is the same as the current object
                         if (limit.blockType == self.obj_name): 
                             if(searched_self.obj_limits[limit.blockType] > 0):
-                                searched_self.obj_limits[limit.blockType] -= 1 # increment the limit counter
+                                searched_self.obj_limits[limit.blockType] -= 1 # decrement the limit counter
                             if(searched_self.obj_limits[limit.blockType] == 0):
                                 searched_self.obj_limits.pop(limit.blockType)
-                                    
-                            if (searched_self.obj_limits[limit.blockType] >= limit.lowerLimit):
-                                limit_counter += 1 # tohle ma oznacovat pocet splnenych pravidel
+                            else:    
+                                if (searched_self.obj_limits[limit.blockType] >= limit.lowerLimit):
+                                    limit_counter += 1 # tohle ma oznacovat pocet splnenych pravidel
 
-                    if (limit_counter == len(ruleset.nodes[searched_self.obj_class_id].limits)): # pokud je pocet splnenych pravidel stejne dlouhy jako pocet pravidel - zelena                      
-                        plocha.delete(searched_self.fill)
-                        searched_self.fill = plocha.create_rectangle(searched_self.top_l,searched_self.top_r,searched_self.bot_l,searched_self.bot_r,fill="green")
-                    else:
+                    if (limit_counter != len(ruleset.nodes[searched_self.obj_class_id].limits)): # pokud je pocet splnenych pravidel stejne dlouhy jako pocet pravidel - zelena                      
                         plocha.delete(searched_self.fill)
                         searched_self.fill = plocha.create_rectangle(searched_self.top_l,searched_self.top_r,searched_self.bot_l,searched_self.bot_r,fill="red")
-
 
 
         plocha.delete(self.fill)
