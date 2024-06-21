@@ -15,6 +15,11 @@ w=640
 h=480
 scale = 15 #jen pro ukazovatko
 magic_number = 40
+
+qr_per_obj = 5
+qr_mode = 1 # 0 -> 1 QR per object, 1 -> 5 QR per object
+            # 0..4 -> 0. object, 5..9 -> 1. object, 10..14 -> 2. object, 15..19 -> 3. object
+
 config_path = 'helper_files/config.json'
 
 ruleset = Ruleset.parse_json(config_path)
@@ -108,6 +113,17 @@ mygrid = MyGrid()
 #--------------------------------------------------------------------
 #
 #--------------------------------------------------------------------
+
+def calculate_id(obj_id):
+    if(qr_mode == 0):
+        return obj_id
+
+    id_counter = 0
+    while(obj_id > 4):
+        obj_id -= qr_per_obj
+        id_counter += 1
+    return id_counter
+
 
 # TODO: LQ, FS, Park - Park to prestane snimat, LQ zcervena, Park se opet objevi, ale LQ zustava cervene
 def draw(space: MySpace): # space is the object that is being moved
@@ -241,7 +257,7 @@ class MyListener(TuioListener):
         actual_y=Decimal(y*h)
         
         myObjects.update({obj.session_id : MyObject(obj.class_id,actual_x,actual_y)})
-        mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)].obj_class_id = obj.class_id #updating the object class id
+        mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)].obj_class_id = calculate_id(obj.class_id) #updating the object class id
         mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)].Fill() # calling Fill on MySpace object, which holds x,y,ID of the object
 
     def update_tuio_object(self, obj):
@@ -263,7 +279,8 @@ class MyListener(TuioListener):
 
         if (not mygrid.m_grid[floor(lx/magic_number)][floor(ly/magic_number)].__eq__(mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)])):
             mygrid.m_grid[floor(lx/magic_number)][floor(ly/magic_number)].Erase()
-            mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)].obj_class_id = obj.class_id #updating the object class id
+            mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)].obj_class_id = calculate_id(obj.class_id) #updating the object class id
+
             mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)].Fill() # calling Fill on MySpace object, which holds x,y,ID of the object
 
         myObjects[obj.session_id].last_x = actual_x
