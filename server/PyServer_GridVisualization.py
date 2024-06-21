@@ -85,7 +85,7 @@ class MySpace():
                                 if (searched_self.obj_limits[limit.blockType] >= limit.lowerLimit):
                                     limit_counter += 1 # tohle ma oznacovat pocet splnenych pravidel
 
-                    if (limit_counter == 0): # pokud je pocet splnenych pravidel stejne dlouhy jako pocet pravidel - zelena                      
+                    if (limit_counter == 0 and len(ruleset.nodes[searched_self.obj_class_id].limits) > 0): # pokud je pocet splnenych pravidel stejne dlouhy jako pocet pravidel - zelena                      
                         plocha.delete(searched_self.fill)
                         searched_self.fill = plocha.create_rectangle(searched_self.top_l,searched_self.top_r,searched_self.bot_l,searched_self.bot_r,fill="red")
                     elif len(ruleset.nodes[searched_self.obj_class_id].limits) != 1 and len(ruleset.nodes[searched_self.obj_class_id].limits) > limit_counter > 0:
@@ -128,7 +128,7 @@ def calculate_id(obj_id):
     return id_counter
 
 
-# TODO: LQ, FS, Park - Park to prestane snimat, LQ zcervena, Park se opet objevi, ale LQ zustava cervene
+# TODO: LQ a Park - 
 def draw(space: MySpace): # space is the object that is being moved
     space.obj_name = ruleset.nodes[space.obj_class_id].name # set the grid object name from the config file 
     space_has_limits = False
@@ -189,13 +189,13 @@ def draw(space: MySpace): # space is the object that is being moved
                         if (searched_space.obj_limits[limit.blockType] >= limit.lowerLimit):
                             limit_counter += 1 # tohle ma oznacovat pocet splnenych pravidel
 
-                if (limit_counter == len(ruleset.nodes[searched_space.obj_class_id].limits)): # pokud je pocet splnenych pravidel stejne dlouhy jako pocet pravidel - zelena                      
+                if (limit_counter == len(ruleset.nodes[searched_space.obj_class_id].limits) and len(ruleset.nodes[searched_space.obj_class_id].limits) > 0): # pokud je pocet splnenych pravidel stejne dlouhy jako pocet pravidel - zelena                      
                     plocha.delete(searched_space.fill)
                     searched_space.fill = plocha.create_rectangle(searched_space.top_l,searched_space.top_r,searched_space.bot_l,searched_space.bot_r,fill="green")
-                elif len(ruleset.nodes[searched_space.obj_class_id].limits) != 1 and len(ruleset.nodes[searched_space.obj_class_id].limits) > limit_counter > 0:
+                elif len(ruleset.nodes[searched_space.obj_class_id].limits) > limit_counter > 0 and len(ruleset.nodes[searched_space.obj_class_id].limits) > 0:
                     plocha.delete(searched_space.fill)
                     searched_space.fill = plocha.create_rectangle(searched_space.top_l,searched_space.top_r,searched_space.bot_l,searched_space.bot_r,fill="yellow")
-                elif (limit_counter == 0):
+                elif (limit_counter == 0 and len(ruleset.nodes[searched_space.obj_class_id].limits) > 0):
                     plocha.delete(searched_space.fill)
                     searched_space.fill = plocha.create_rectangle(searched_space.top_l,searched_space.top_r,searched_space.bot_l,searched_space.bot_r,fill="red")
 
