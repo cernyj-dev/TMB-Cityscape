@@ -17,7 +17,7 @@ scale = 15 #jen pro ukazovatko
 magic_number = 40
 
 qr_per_obj = 5
-qr_mode = 1 # 0 -> 1 QR per object, 1 -> 5 QR per object
+qr_mode = 0 # 0 -> 1 QR per object, 1 -> 5 QR per object
             # 0..4 -> 0. object, 5..9 -> 1. object, 10..14 -> 2. object, 15..19 -> 3. object
 
 config_path = 'helper_files/config.json'
