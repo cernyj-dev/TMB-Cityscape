@@ -17,7 +17,7 @@ scale = 15 #jen pro ukazovatko
 magic_number = 40
 
 qr_per_obj = 5
-qr_mode = 1 # 0 -> 1 QR per object, 1 -> 5 QR per object
+qr_mode = 0 # 0 -> 1 QR per object, 1 -> 5 QR per object
             # 0..4 -> 0. object, 5..9 -> 1. object, 10..14 -> 2. object, 15..19 -> 3. object
 
 config_path = 'helper_files/config.json'
@@ -85,9 +85,12 @@ class MySpace():
                                 if (searched_self.obj_limits[limit.blockType] >= limit.lowerLimit):
                                     limit_counter += 1 # tohle ma oznacovat pocet splnenych pravidel
 
-                    if (limit_counter != len(ruleset.nodes[searched_self.obj_class_id].limits)): # pokud je pocet splnenych pravidel stejne dlouhy jako pocet pravidel - zelena                      
+                    if (limit_counter == 0): # pokud je pocet splnenych pravidel stejne dlouhy jako pocet pravidel - zelena                      
                         plocha.delete(searched_self.fill)
                         searched_self.fill = plocha.create_rectangle(searched_self.top_l,searched_self.top_r,searched_self.bot_l,searched_self.bot_r,fill="red")
+                    elif len(ruleset.nodes[searched_self.obj_class_id].limits) != 1 and len(ruleset.nodes[searched_self.obj_class_id].limits) > limit_counter > 0:
+                        plocha.delete(searched_self.fill)
+                        searched_self.fill = plocha.create_rectangle(searched_self.top_l,searched_self.top_r,searched_self.bot_l,searched_self.bot_r,fill="yellow")
 
         self.obj_class_id = -1
         self.obj_name = ""
@@ -189,13 +192,16 @@ def draw(space: MySpace): # space is the object that is being moved
                 if (limit_counter == len(ruleset.nodes[searched_space.obj_class_id].limits)): # pokud je pocet splnenych pravidel stejne dlouhy jako pocet pravidel - zelena                      
                     plocha.delete(searched_space.fill)
                     searched_space.fill = plocha.create_rectangle(searched_space.top_l,searched_space.top_r,searched_space.bot_l,searched_space.bot_r,fill="green")
-                else:
+                elif len(ruleset.nodes[searched_space.obj_class_id].limits) != 1 and len(ruleset.nodes[searched_space.obj_class_id].limits) > limit_counter > 0:
+                    plocha.delete(searched_space.fill)
+                    searched_space.fill = plocha.create_rectangle(searched_space.top_l,searched_space.top_r,searched_space.bot_l,searched_space.bot_r,fill="yellow")
+                elif (limit_counter == 0):
                     plocha.delete(searched_space.fill)
                     searched_space.fill = plocha.create_rectangle(searched_space.top_l,searched_space.top_r,searched_space.bot_l,searched_space.bot_r,fill="red")
 
 
 
-    isLimitOk = True
+    limit_checksum = 0
     # if the current object has limits
     if(space_has_limits):
         # iterate through limits of the current object and check if they are met
@@ -205,16 +211,20 @@ def draw(space: MySpace): # space is the object that is being moved
                 if node_limit.blockType == limit:
                     if node_limit.lowerLimit <= count:
                         limit_ok = True
+                        limit_checksum += 1
                         break
             if not limit_ok:
-                isLimitOk = False
                 break
-        
-
-    if (isLimitOk):
-      space.fill = plocha.create_rectangle(space.top_l,space.top_r,space.bot_l,space.bot_r,fill="green")
     else:
-      space.fill = plocha.create_rectangle(space.top_l,space.top_r,space.bot_l,space.bot_r,fill="red")
+      space.fill = plocha.create_rectangle(space.top_l,space.top_r,space.bot_l,space.bot_r,fill="green")
+      return
+
+    if (limit_checksum == len(ruleset.nodes[space.obj_class_id].limits) and len(ruleset.nodes[space.obj_class_id].limits) > 0):
+      space.fill = plocha.create_rectangle(space.top_l,space.top_r,space.bot_l,space.bot_r,fill="green")
+    elif (limit_checksum > 0 and len(ruleset.nodes[space.obj_class_id].limits) > 0):
+        space.fill = plocha.create_rectangle(space.top_l,space.top_r,space.bot_l,space.bot_r,fill="yellow")
+    else:
+        space.fill = plocha.create_rectangle(space.top_l,space.top_r,space.bot_l,space.bot_r,fill="red")
     return
 #--------------------------------------------------------------------
 #
