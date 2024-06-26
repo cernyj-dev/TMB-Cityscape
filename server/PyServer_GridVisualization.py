@@ -107,11 +107,11 @@ class MySpace():
                                     limit_counter += 1
 
                     if limit_counter == 0 and len(ruleset.nodes[searched_self.obj_class_id].limits) > 0:
-                        plocha.delete(searched_self.fill)
-                        searched_self.fill = plocha.create_image(searched_self.top_l + magic_number // 2, searched_self.top_r + magic_number // 2, image=red_overlay)
+                        plocha.delete(searched_self.overlay)
+                        searched_self.overlay = plocha.create_image(searched_self.top_l + magic_number // 2, searched_self.top_r + magic_number // 2, image=red_overlay)
                     elif len(ruleset.nodes[searched_self.obj_class_id].limits) != 1 and len(ruleset.nodes[searched_self.obj_class_id].limits) > limit_counter > 0:
-                        plocha.delete(searched_self.fill)
-                        searched_self.fill = plocha.create_image(searched_self.top_l + magic_number // 2, searched_self.top_r + magic_number // 2, image=yellow_overlay)
+                        plocha.delete(searched_self.overlay)
+                        searched_self.overlay = plocha.create_image(searched_self.top_l + magic_number // 2, searched_self.top_r + magic_number // 2, image=yellow_overlay)
 
         self.obj_class_id = -1
         self.obj_name = ""
@@ -151,103 +151,75 @@ def calculate_id(obj_id):
 
 
 # TODO: LQ a Park - 
-def draw(space: MySpace): # space is the object that is being moved
-    space.obj_name = ruleset.nodes[space.obj_class_id].name # set the grid object name from the config file 
+def draw(space: MySpace):
+    space.obj_name = ruleset.nodes[space.obj_class_id].name
     space_has_limits = False
 
-    if(ruleset.nodes[space.obj_class_id].limits != []):
-        space_has_limits = True    
-    # fill the limit dictionary counter with each limit and its number of limited objects in its range to 0
-    # should be correct even for updating an object from update_tuio_object - the logic is erasing the object and then adding it again
-    for limit in ruleset.nodes[space.obj_class_id].limits:
-        space.obj_limits.update({limit.blockType: 0}) # add the limit to the space    
+    if ruleset.nodes[space.obj_class_id].limits:
+        space_has_limits = True
 
-    # iterate through rows and columns
-    for col in range(0, w//magic_number):
-        for row in range(0, h//magic_number):
-            # if the searched space is the same as the current space
-            if(col == space.col and row == space.row): 
+    for limit in ruleset.nodes[space.obj_class_id].limits:
+        space.obj_limits.update({limit.blockType: 0})
+
+    for col in range(0, w // magic_number):
+        for row in range(0, h // magic_number):
+            if col == space.col and row == space.row:
                 continue
-            # if the searched space is empty
-            if(mygrid.m_grid[col][row].obj_class_id == -1): 
+            if mygrid.m_grid[col][row].obj_class_id == -1:
                 continue
 
             searched_space = mygrid.m_grid[col][row]
-
             col_rel = abs(space.col - searched_space.col)
             row_rel = abs(space.row - searched_space.row)
 
-            # THE CURRENT OBJECT SECTION --------------------------------
-            # if the searched space object is within the range of the current space object
-            if(space_has_limits and (col_rel <= ruleset.nodes[space.obj_class_id].range) and (row_rel <= ruleset.nodes[space.obj_class_id].range)): 
-                # iterate through limits of the space object
+            if space_has_limits and col_rel <= ruleset.nodes[space.obj_class_id].range and row_rel <= ruleset.nodes[space.obj_class_id].range:
                 for limit in ruleset.nodes[space.obj_class_id].limits:
-                    if (searched_space.obj_name == limit.blockType): # if the search space (object) is the same as one of the limits
-                        if(limit.blockType not in space.obj_limits): # if the limit is not in the space object limits
+                    if searched_space.obj_name == limit.blockType:
+                        if limit.blockType not in space.obj_limits:
                             space.obj_limits[limit.blockType] = 1
                         else:
-                            space.obj_limits[limit.blockType] += 1 # increment the limit counter of the space object
+                            space.obj_limits[limit.blockType] += 1
 
-            # if the searched space doesnt have any limits - no need to change the count in them
-            if(ruleset.nodes[searched_space.obj_class_id].limits == []):
+            if not ruleset.nodes[searched_space.obj_class_id].limits:
                 continue
 
-            # THE OTHER OBJECT SECTION --------------------------------
-            # if the current space object is within the range of the searched space object
-            if(col_rel <= ruleset.nodes[searched_space.obj_class_id].range) and (row_rel <= ruleset.nodes[searched_space.obj_class_id].range):
+            if col_rel <= ruleset.nodes[searched_space.obj_class_id].range and row_rel <= ruleset.nodes[searched_space.obj_class_id].range:
                 limit_counter = 0
-                # iterate through limits of the searched space object - TO CHANGE THE COLOR OF OBJECTS OTHER THAN THE CURRENT SPACE OBJECT
-                for limit in ruleset.nodes[searched_space.obj_class_id].limits: 
-                    # if the limit is the same as the current object
-                    if (limit.blockType == space.obj_name): 
-                        if(limit.blockType not in searched_space.obj_limits): # if the limit is not in the space object limits
-
+                for limit in ruleset.nodes[searched_space.obj_class_id].limits:
+                    if limit.blockType == space.obj_name:
+                        if limit.blockType not in searched_space.obj_limits:
                             searched_space.obj_limits[limit.blockType] = 1
-
                         else:
-
                             searched_space.obj_limits[limit.blockType] += 1
 
-                        if (searched_space.obj_limits[limit.blockType] >= limit.lowerLimit):
-                            limit_counter += 1 # tohle ma oznacovat pocet splnenych pravidel
+                        if searched_space.obj_limits[limit.blockType] >= limit.lowerLimit:
+                            limit_counter += 1
 
-                if (limit_counter == len(ruleset.nodes[searched_space.obj_class_id].limits) and len(ruleset.nodes[searched_space.obj_class_id].limits) > 0): # pokud je pocet splnenych pravidel stejne dlouhy jako pocet pravidel - zelena                      
-                    plocha.delete(searched_space.fill)
-                    searched_space.fill = plocha.create_rectangle(searched_space.top_l,searched_space.top_r,searched_space.bot_l,searched_space.bot_r,fill="green")
+                if limit_counter == len(ruleset.nodes[searched_space.obj_class_id].limits) and len(ruleset.nodes[searched_space.obj_class_id].limits) > 0:
+                    plocha.delete(searched_space.overlay)
+                    #searched_space.fill = plocha.create_image(searched_space.top_l + magic_number // 2, searched_space.top_r + magic_number // 2, image=green_overlay)
                 elif len(ruleset.nodes[searched_space.obj_class_id].limits) > limit_counter > 0 and len(ruleset.nodes[searched_space.obj_class_id].limits) > 0:
-                    plocha.delete(searched_space.fill)
-                    searched_space.fill = plocha.create_rectangle(searched_space.top_l,searched_space.top_r,searched_space.bot_l,searched_space.bot_r,fill="yellow")
-                elif (limit_counter == 0 and len(ruleset.nodes[searched_space.obj_class_id].limits) > 0):
-                    plocha.delete(searched_space.fill)
-                    searched_space.fill = plocha.create_rectangle(searched_space.top_l,searched_space.top_r,searched_space.bot_l,searched_space.bot_r,fill="red")
+                    plocha.delete(searched_space.overlay)
+                    searched_space.overlay = plocha.create_image(searched_space.top_l + magic_number // 2, searched_space.top_r + magic_number // 2, image=yellow_overlay)
+                elif limit_counter == 0 and len(ruleset.nodes[searched_space.obj_class_id].limits) > 0:
+                    plocha.delete(searched_space.overlay)
+                    searched_space.overlay = plocha.create_image(searched_space.top_l + magic_number // 2, searched_space.top_r + magic_number // 2, image=red_overlay)
 
+    image_id = plocha.create_image(space.top_l + magic_number // 2, space.top_r + magic_number // 2, image=images[space.obj_name])
+    space.fill = image_id
 
+    if space_has_limits:
+        limits_satisfied = [
+            limit.lowerLimit <= space.obj_limits.get(limit.blockType, 0) <= limit.upperLimit
+            for limit in ruleset.nodes[space.obj_class_id].limits
+        ]
+        if all(limits_satisfied):
+            return
+        elif any(limits_satisfied):
+            space.overlay = plocha.create_image(space.top_l + magic_number // 2, space.top_r + magic_number // 2, image=yellow_overlay)
+        else:
+            space.overlay = plocha.create_image(space.top_l + magic_number // 2, space.top_r + magic_number // 2, image=red_overlay)
 
-    limit_checksum = 0
-    # if the current object has limits
-    if(space_has_limits):
-        # iterate through limits of the current object and check if they are met
-        for limit, count in space.obj_limits.items():
-            limit_ok = False
-            for node_limit in ruleset.nodes[space.obj_class_id].limits:
-                if node_limit.blockType == limit:
-                    if node_limit.lowerLimit <= count:
-                        limit_ok = True
-                        limit_checksum += 1
-                        break
-            if not limit_ok:
-                break
-    else:
-      space.fill = plocha.create_rectangle(space.top_l,space.top_r,space.bot_l,space.bot_r,fill="green")
-      return
-
-    if (limit_checksum == len(ruleset.nodes[space.obj_class_id].limits) and len(ruleset.nodes[space.obj_class_id].limits) > 0):
-      space.fill = plocha.create_rectangle(space.top_l,space.top_r,space.bot_l,space.bot_r,fill="green")
-    elif (limit_checksum > 0 and len(ruleset.nodes[space.obj_class_id].limits) > 0):
-        space.fill = plocha.create_rectangle(space.top_l,space.top_r,space.bot_l,space.bot_r,fill="yellow")
-    else:
-        space.fill = plocha.create_rectangle(space.top_l,space.top_r,space.bot_l,space.bot_r,fill="red")
-    return
 #--------------------------------------------------------------------
 #
 #--------------------------------------------------------------------
