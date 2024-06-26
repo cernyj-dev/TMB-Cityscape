@@ -221,7 +221,7 @@ def draw(space: MySpace):
             space.overlay = plocha.create_image(space.top_l + magic_number // 2, space.top_r + magic_number // 2, image=red_overlay)
 
 #--------------------------------------------------------------------
-#
+# all good
 #--------------------------------------------------------------------
 
 
