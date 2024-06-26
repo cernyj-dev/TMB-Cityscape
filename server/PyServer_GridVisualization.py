@@ -84,45 +84,40 @@ class MySpace():
         draw(self)
         
     def Erase(self):
-        for col in range(0, w//magic_number):
-            for row in range(0, h//magic_number):
-                # if the searched space is the same as the current space
-                if(col == self.col and row == self.row): 
+        for col in range(0, w // magic_number):
+            for row in range(0, h // magic_number):
+                if col == self.col and row == self.row:
                     continue
-                # if the searched self is empty
-                if(mygrid.m_grid[col][row].obj_class_id == -1): 
+                if mygrid.m_grid[col][row].obj_class_id == -1:
                     continue
-
                 searched_self = mygrid.m_grid[col][row]
-
                 col_rel = abs(self.col - searched_self.col)
                 row_rel = abs(self.row - searched_self.row)
-                 
-                if(col_rel <= ruleset.nodes[searched_self.obj_class_id].range) and (row_rel <= ruleset.nodes[searched_self.obj_class_id].range):
-                    limit_counter = 0
-                    # iterate through limits of the searched space object - TO CHANGE THE COLOR OF OBJECTS OTHER THAN THE CURRENT SPACE OBJECT
-                    for limit in ruleset.nodes[searched_self.obj_class_id].limits: 
-                        # if the limit is the same as the current object
-                        if (limit.blockType == self.obj_name): 
-                            if(searched_self.obj_limits[limit.blockType] > 0):
-                                searched_self.obj_limits[limit.blockType] -= 1 # decrement the limit counter
-                            if(searched_self.obj_limits[limit.blockType] == 0):
-                                searched_self.obj_limits.pop(limit.blockType)
-                            else:    
-                                if (searched_self.obj_limits[limit.blockType] >= limit.lowerLimit):
-                                    limit_counter += 1 # tohle ma oznacovat pocet splnenych pravidel
 
-                    if (limit_counter == 0 and len(ruleset.nodes[searched_self.obj_class_id].limits) > 0): # pokud je pocet splnenych pravidel stejne dlouhy jako pocet pravidel - zelena                      
+                if (col_rel <= ruleset.nodes[searched_self.obj_class_id].range) and (row_rel <= ruleset.nodes[searched_self.obj_class_id].range):
+                    limit_counter = 0
+                    for limit in ruleset.nodes[searched_self.obj_class_id].limits:
+                        if limit.blockType == self.obj_name:
+                            if searched_self.obj_limits[limit.blockType] > 0:
+                                searched_self.obj_limits[limit.blockType] -= 1
+                            if searched_self.obj_limits[limit.blockType] == 0:
+                                searched_self.obj_limits.pop(limit.blockType)
+                            else:
+                                if searched_self.obj_limits[limit.blockType] >= limit.lowerLimit:
+                                    limit_counter += 1
+
+                    if limit_counter == 0 and len(ruleset.nodes[searched_self.obj_class_id].limits) > 0:
                         plocha.delete(searched_self.fill)
-                        searched_self.fill = plocha.create_rectangle(searched_self.top_l,searched_self.top_r,searched_self.bot_l,searched_self.bot_r,fill="red")
+                        searched_self.fill = plocha.create_image(searched_self.top_l + magic_number // 2, searched_self.top_r + magic_number // 2, image=red_overlay)
                     elif len(ruleset.nodes[searched_self.obj_class_id].limits) != 1 and len(ruleset.nodes[searched_self.obj_class_id].limits) > limit_counter > 0:
                         plocha.delete(searched_self.fill)
-                        searched_self.fill = plocha.create_rectangle(searched_self.top_l,searched_self.top_r,searched_self.bot_l,searched_self.bot_r,fill="yellow")
+                        searched_self.fill = plocha.create_image(searched_self.top_l + magic_number // 2, searched_self.top_r + magic_number // 2, image=yellow_overlay)
 
         self.obj_class_id = -1
         self.obj_name = ""
-
         plocha.delete(self.fill)
+        plocha.delete(self.overlay)
+
 
 #--------------------------------------------------------------------
 #
