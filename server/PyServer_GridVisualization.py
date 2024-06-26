@@ -68,10 +68,12 @@ class MySpace():
         self.col = col
         self.row = row
         self.obj_class_id = -1
-        self.obj_name = "" # name of the object corresponding to the config file
-        self.obj_limits = {} # dictionary for limits of the object - structured as string: int (limit name: limit counter)
-        self.image = plocha.create_rectangle(x1,y1,x2,y2)
-        plocha.create_text(x1+20,y1+20,text='{},{}'.format(col,row),font="Arial 10")
+        self.obj_name = ""  
+        self.obj_limits = {}  
+        self.image = plocha.create_rectangle(x1, y1, x2, y2)
+        self.text = plocha.create_text(x1 + 20, y1 + 20, text='{},{}'.format(col, row), font="Arial 10")
+        self.fill = None
+        self.overlay = None
 
     def __eq__(self, other) -> bool:
         if not isinstance(other,MySpace):
@@ -80,6 +82,7 @@ class MySpace():
     
     def Fill(self):
         draw(self)
+        
     def Erase(self):
         for col in range(0, w//magic_number):
             for row in range(0, h//magic_number):
