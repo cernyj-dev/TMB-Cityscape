@@ -5,16 +5,18 @@ from threading import Thread
 from decimal import Decimal
 import os
 import tkinter as tk
+from PIL import Image, ImageTk, ImageDraw
 from helper_files.ConfigParser import Ruleset
 
 ##
 # DEFAULT CONFIG
 #   w,h - paremeters of tkinter window, same parameters are used in thesis-tracker
 #   scale - relative scale of shown objects
-w=640
-h=480
-scale = 15 #jen pro ukazovatko
-magic_number = 40
+multiplier = 1.5
+w = int(640 * multiplier)
+h = int(480 * multiplier)
+scale = int(15 * multiplier) #jen pro ukazovatko
+magic_number = int(40 * multiplier)
 
 
 config_path = 'helper_files/config.json'
@@ -33,11 +35,29 @@ plocha = tk.Canvas(width=w,height=h)
 plocha.pack()
 
 #------------------------------------------------------------
+# Image vizualization
+
+#------------------------------------------------------------
+images = {
+    'Park': ImageTk.PhotoImage(Image.open('images/park.png').resize((magic_number, magic_number))),
+    'Apartment Buildings': ImageTk.PhotoImage(Image.open('images/apartment_buildings.png').resize((magic_number, magic_number))),
+    'Fire Station': ImageTk.PhotoImage(Image.open('images/fire_house.png').resize((magic_number, magic_number))),
+    'Lake': ImageTk.PhotoImage(Image.open('images/lake.png').resize((magic_number, magic_number))),    
+}
+
+def create_overlay(color, size, opacity):
+    overlay = Image.new('RGBA', size, color + (int(255 * opacity),))
+    return ImageTk.PhotoImage(overlay)
+
+opacity_settings = 0.5
+green_overlay = create_overlay((0, 255, 0), (magic_number, magic_number), opacity_settings)
+yellow_overlay = create_overlay((255, 255, 0), (magic_number, magic_number), opacity_settings)
+red_overlay = create_overlay((255, 0, 0), (magic_number, magic_number), opacity_settings)
+
+#------------------------------------------------------------
 # Grid vizualization 
 #
 #------------------------------------------------------------
-
-
 
 class MySpace():
     def __init__(self,x1,y1,x2,y2,col,row):
