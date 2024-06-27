@@ -17,6 +17,12 @@ w = int(1280 * multiplier)
 h = int(800 * multiplier)
 scale = int(15 * multiplier) #jen pro ukazovatko
 tile_size = int(120 * multiplier)
+#variables for projection calibration
+# x_coef = Decimal(0.005)
+x_coef = Decimal(0.2)
+y_coef = Decimal(0.07)
+x_offset = 17
+y_offset = -53
 
 
 config_path = 'helper_files/config.json'
@@ -32,7 +38,9 @@ qr_mode = 1 # 0 -> 1 QR per object, 1 -> 5 QR per object
             # 0..4 -> 0. object, 5..9 -> 1. object, 10..14 -> 2. object, 15..19 -> 3. object
 
 plocha = tk.Canvas(width=w,height=h, bg="black")
-plocha.pack()
+plocha.pack(fill = "none", expand=True)
+
+plocha.create_oval(w/2-5, h/2 - 5, w/2 +5, h/2 +5, fill = "red", outline="white")
 
 #------------------------------------------------------------
 # Image vizualization
@@ -104,6 +112,7 @@ class MySpace():
     
     def Fill(self):
         draw(self)
+
 
     # Goes through all of the objects which exist in the grid and checks if the object which is being erased is in the range of any other object
     # Which would change the color of the overlay of the neighboring object    
@@ -221,7 +230,17 @@ def draw(space: MySpace):
     decide_overlay_based_on_limits(space)
 
 #------------------------------------------------------------
-#
+
+#function to recalculate coordinates from camera space to projector space
+def recalculate_coords(x, y):
+     x += x_offset
+     y = h - y
+     y += y_offset
+     y -= (y - h//2) * y_coef
+     x -= (x - w//2) * x_coef
+     return x,y
+
+
 #------------------------------------------------------------
 class MyObject():
     def __init__(self,class_id,x,y):
@@ -252,9 +271,8 @@ class MyListener(TuioListener):
         x,y = obj.position
         x= Decimal(x)
         y= Decimal(y)
-        actual_x=Decimal(x*w)
-        actual_y=Decimal(y*h)
-        
+        actual_x, actual_y = recalculate_coords(x*w, y*h)
+
         myObjects.update({obj.session_id : MyObject(obj.class_id,actual_x,actual_y)})
         mygrid.m_grid[floor(actual_x/tile_size)][floor(actual_y/tile_size)].obj_class_id = calculate_id(obj.class_id) #updating the object class id
         mygrid.m_grid[floor(actual_x/tile_size)][floor(actual_y/tile_size)].Fill() # calling Fill on MySpace object, which holds x,y,ID of the object
@@ -263,8 +281,8 @@ class MyListener(TuioListener):
         x,y = obj.position
         x= Decimal(x)
         y= Decimal(y)
-        actual_x=Decimal(x*w)
-        actual_y=Decimal(y*h)
+        actual_x, actual_y = recalculate_coords(x*w, y*h)
+
 
         lx= myObjects[obj.session_id].last_x
         ly= myObjects[obj.session_id].last_y
