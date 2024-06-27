@@ -12,11 +12,11 @@ from helper_files.ConfigParser import Ruleset
 # DEFAULT CONFIG
 #   w,h - paremeters of tkinter window, same parameters are used in thesis-tracker
 #   scale - relative scale of shown objects
-multiplier = 2
-w = int(640 * multiplier)
-h = int(480 * multiplier)
+multiplier = 1
+w = int(1280 * multiplier)
+h = int(800 * multiplier)
 scale = int(15 * multiplier) #jen pro ukazovatko
-tile_size = int(70 * multiplier)
+tile_size = int(120 * multiplier)
 
 
 config_path = 'helper_files/config.json'
