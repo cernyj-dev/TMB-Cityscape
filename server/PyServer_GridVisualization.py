@@ -40,7 +40,7 @@ qr_mode = 1 # 0 -> 1 QR per object, 1 -> 5 QR per object
 plocha = tk.Canvas(width=w,height=h, bg="black")
 plocha.pack(fill = "none", expand=True)
 
-plocha.create_oval(w/2-5, h/2 - 5, w/2 +5, h/2 +5, fill = "red", outline="white")
+# plocha.create_oval(w/2-5, h/2 - 5, w/2 +5, h/2 +5, fill = "red", outline="white") #center of window
 
 #------------------------------------------------------------
 # Image vizualization
