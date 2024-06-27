@@ -24,8 +24,6 @@ y_coef = Decimal(0.07)
 x_offset = 17
 y_offset = -53
 
-# TODO - decrement pocet objektu v obj_limits dictionary potom co nejakej soused neni green
-
 config_path = 'helper_files/config.json'
 
 ruleset = Ruleset.parse_json(config_path)
@@ -71,6 +69,7 @@ def decide_overlay_based_on_limits(space, delete = False):
         return    
     all_limits_satisfied = True
     any_limits_satisfied = False
+    # check if all limits are satisfied
     for limit in ruleset.nodes[space.obj_class_id].limits:
         limit_value = space.obj_limits[limit.blockType]
         if limit_value >= limit.lowerLimit:
@@ -195,8 +194,10 @@ class MyGrid():
                 row_cnt = row_cnt+1
             col_cnt = col_cnt+1        
 mygrid = MyGrid()
-#--------------------------------------------------------------------
-
+#-------------------------------------------------------------------
+# Makes sure that the limits of the object are updated when the object is no longer usable - "green"
+# Meaning that if Living Quarters have in its range a Park and a Fire Station, but the FS isnt functional, the Living Quarters wont have that FS counted as a fulfilled limit
+# Therefore Living Quarters wont be transparent (green), but will be yellow instead
 def update_neighbours(space, is_root_green):
     if not space.neighs_pointing_to_me:
         return
@@ -206,7 +207,6 @@ def update_neighbours(space, is_root_green):
         if space.obj_name not in mygrid.m_grid[pair[0]][pair[1]].obj_limits:
             continue
 
-        
         if is_root_green:
             mygrid.m_grid[pair[0]][pair[1]].obj_limits[space.obj_name] += 1
         else:
@@ -385,6 +385,6 @@ plocha.bind_all("q",my_quit)
 
 plocha.mainloop()
 
-# barvy cervena - zadna podminka neni splnena
-# barvy pruhledna - vsechny podminky jsou splneny
-# barvy zluta - splnena je alespon jedna podminka
+# red color - no limit was fulfilled (no condition met)
+# yellow color - at least one condition was met
+# transparent color - all conditions were met
