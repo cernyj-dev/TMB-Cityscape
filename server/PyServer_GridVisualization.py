@@ -31,7 +31,7 @@ qr_per_obj = num_of_QR_codes // len(ruleset.nodes) # how many QR codes are there
 qr_mode = 1 # 0 -> 1 QR per object, 1 -> 5 QR per object
             # 0..4 -> 0. object, 5..9 -> 1. object, 10..14 -> 2. object, 15..19 -> 3. object
 
-plocha = tk.Canvas(width=w,height=h)
+plocha = tk.Canvas(width=w,height=h, bg="black")
 plocha.pack()
 
 #------------------------------------------------------------
@@ -92,8 +92,8 @@ class MySpace():
         self.obj_class_id = -1
         self.obj_name = ""  
         self.obj_limits = {}  
-        self.image = plocha.create_rectangle(x1, y1, x2, y2)
-        self.text = plocha.create_text(x1 + tile_size//2, y1 + tile_size//2, text='{},{}'.format(col, row), font="Arial 10")
+        self.image = plocha.create_rectangle(x1, y1, x2, y2, outline="white")
+        self.text = plocha.create_text(x1 + tile_size//2, y1 + tile_size//2, text='{},{}'.format(col, row), font="Arial 10", fill="white")
         self.fill = None
         self.overlay = None
 
@@ -153,9 +153,9 @@ class MyGrid():
             col_cnt = col_cnt+1        
 mygrid = MyGrid()
 #--------------------------------------------------------------------
-#
-#--------------------------------------------------------------------
 
+
+#--------------------------------------------------------------------
 def calculate_id(obj_id):
     if(qr_mode == 0):
         return obj_id
@@ -230,7 +230,7 @@ class MyObject():
         self.last_y = y
 
         self.myImage = [] #pro vsechny objekty - ukazovatko i objekt
-        self.myImage.append(plocha.create_rectangle(x-scale,y-scale,x+scale,y+scale,fill="")) #ukazovatko
+        self.myImage.append(plocha.create_rectangle(x-scale,y-scale,x+scale,y+scale,fill="", outline="white")) #ukazovatko
         self.myImage.append(plocha.create_oval(x-4,y-4,x+4,y+4,fill="red")) #ukazovatko
 
     def move(self,x,y):
