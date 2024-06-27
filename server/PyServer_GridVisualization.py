@@ -12,11 +12,11 @@ from helper_files.ConfigParser import Ruleset
 # DEFAULT CONFIG
 #   w,h - paremeters of tkinter window, same parameters are used in thesis-tracker
 #   scale - relative scale of shown objects
-multiplier = 2
+multiplier = 1.5
 w = int(640 * multiplier)
 h = int(480 * multiplier)
 scale = int(15 * multiplier) #jen pro ukazovatko
-tile_size = int(70 * multiplier)
+tile_size = int(40 * multiplier)
 
 
 config_path = 'helper_files/config.json'
@@ -57,18 +57,26 @@ red_overlay = create_overlay((255, 0, 0), (tile_size, tile_size), opacity_settin
 #------------------------------------------------------------
 
 def decide_overlay_based_on_limits(space, delete = False):
-    if not ruleset.nodes[space.obj_class_id].limits:
+    if not ruleset.nodes[space.obj_class_id].limits: # if the space doesnt have limits - doesnt have an overlay
         return    
-    limits_satisfied = [
-        limit.lowerLimit <= space.obj_limits.get(limit.blockType, 0)
-        for limit in ruleset.nodes[space.obj_class_id].limits
-    ]
-    if all(limits_satisfied):
-        return
-    elif any(limits_satisfied):
+    all_limits_satisfied = True
+    any_limits_satisfied = False
+    for limit in ruleset.nodes[space.obj_class_id].limits:
+        limit_value = space.obj_limits[limit.blockType]
+        if limit_value >= limit.lowerLimit:
+            any_limits_satisfied = True
+        else:
+            all_limits_satisfied = False
+
+    # all limits satisfied -> "transparent" overlay
+    if all_limits_satisfied:
         if(delete):
             plocha.delete(space.overlay)
 
+        return
+    if any_limits_satisfied:
+        if(delete):
+            plocha.delete(space.overlay)
         space.overlay = plocha.create_image(space.top_l + tile_size // 2, space.top_r + tile_size // 2, image=yellow_overlay)
     else:
         if(delete):
@@ -118,18 +126,19 @@ class MySpace():
                 col_rel = abs(self.col - searched_self.col)
                 row_rel = abs(self.row - searched_self.row)
                 
-                # Is within range
+                # calculating limits of the iterated neighbor object when the current object gets deleted
                 if (col_rel <= ruleset.nodes[searched_self.obj_class_id].range) and (row_rel <= ruleset.nodes[searched_self.obj_class_id].range):
                     for limit in ruleset.nodes[searched_self.obj_class_id].limits:
                         if limit.blockType == self.obj_name:
                             if searched_self.obj_limits[limit.blockType] > 0:
                                 searched_self.obj_limits[limit.blockType] -= 1
-                            if searched_self.obj_limits[limit.blockType] == 0:
-                                searched_self.obj_limits.pop(limit.blockType)
+                            # if searched_self.obj_limits[limit.blockType] == 0:
+                            #     searched_self.obj_limits.pop(limit.blockType)
                     decide_overlay_based_on_limits(searched_self, True)
 
         self.obj_class_id = -1
         self.obj_name = ""
+        self.obj_limits.clear()
         plocha.delete(self.fill)
         plocha.delete(self.overlay)
 
@@ -175,8 +184,11 @@ def draw(space: MySpace):
     if ruleset.nodes[space.obj_class_id].limits:
         space_has_limits = True
 
+    # Initialize the limits of the object in this implementation using the json file
+    # Later on due to its neighbours, the limits will be updated and incremented - the int value will represent how many objects specified by the limits 
+    # are in the range of the current object
     for limit in ruleset.nodes[space.obj_class_id].limits:
-        space.obj_limits.update({limit.blockType: 0})
+        space.obj_limits.setdefault(limit.blockType, 0)
 
     # Go through all of the objects and always check the distance between the iterated object and the object being drawn
     # Then depending on the object's limits, change the color of the overlay
@@ -194,25 +206,23 @@ def draw(space: MySpace):
             # OBJECT BEING DRAWN SECTION
             if space_has_limits and col_rel <= ruleset.nodes[space.obj_class_id].range and row_rel <= ruleset.nodes[space.obj_class_id].range:
                 for limit in ruleset.nodes[space.obj_class_id].limits:
+                    # if the limit of the current object is the same as the object being iterated
                     if searched_space.obj_name == limit.blockType:
-                        if limit.blockType not in space.obj_limits:
-                            space.obj_limits[limit.blockType] = 1
-                        else:
-                            space.obj_limits[limit.blockType] += 1
+                        space.obj_limits[limit.blockType] += 1
 
             if not ruleset.nodes[searched_space.obj_class_id].limits:
                 continue
 
             # ITERATED OBJECT SECTION
             if col_rel <= ruleset.nodes[searched_space.obj_class_id].range and row_rel <= ruleset.nodes[searched_space.obj_class_id].range:
-                print("Searching for limits, curr_obj: ", ruleset.nodes[space.obj_class_id].name, " iterated_obj: ", ruleset.nodes[searched_space.obj_class_id].name)
+                print("Searching for limits, curr_obj: ", space.obj_name, " iterated_obj: ", searched_space.obj_name)
                 print("-----------------------------------")
                 for limit in ruleset.nodes[searched_space.obj_class_id].limits:
+                    # if the limit of the iterated object is the same as the object being drawn
                     if limit.blockType == space.obj_name:
-                        if limit.blockType not in searched_space.obj_limits:
-                            searched_space.obj_limits[limit.blockType] = 1
-                        else:
-                            searched_space.obj_limits[limit.blockType] += 1
+                        print("Limit found: ", limit.blockType, ", obj-limit: ", searched_space.obj_limits[limit.blockType])
+                        searched_space.obj_limits[limit.blockType] += 1
+                        print("Incremented limit: ", searched_space.obj_limits[limit.blockType])
                 decide_overlay_based_on_limits(searched_space, True)
 
     image_id = plocha.create_image(space.top_l + tile_size // 2, space.top_r + tile_size // 2, image=images[space.obj_name])
