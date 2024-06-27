@@ -55,9 +55,31 @@ yellow_overlay = create_overlay((255, 255, 0), (tile_size, tile_size), opacity_s
 red_overlay = create_overlay((255, 0, 0), (tile_size, tile_size), opacity_settings)
 
 #------------------------------------------------------------
+
+def decide_overlay_based_on_limits(space, delete = False):
+    if not ruleset.nodes[space.obj_class_id].limits:
+        return    
+    limits_satisfied = [
+        limit.lowerLimit <= space.obj_limits.get(limit.blockType, 0)
+        for limit in ruleset.nodes[space.obj_class_id].limits
+    ]
+    if all(limits_satisfied):
+        return
+    elif any(limits_satisfied):
+        if(delete):
+            plocha.delete(space.overlay)
+
+        space.overlay = plocha.create_image(space.top_l + tile_size // 2, space.top_r + tile_size // 2, image=yellow_overlay)
+    else:
+        if(delete):
+            plocha.delete(space.overlay)
+        space.overlay = plocha.create_image(space.top_l + tile_size // 2, space.top_r + tile_size // 2, image=red_overlay)
+
+#------------------------------------------------------------
 # Grid vizualization 
 #
 #------------------------------------------------------------
+
 
 class MySpace():
     def __init__(self,x1,y1,x2,y2,col,row):
@@ -98,26 +120,13 @@ class MySpace():
                 
                 # Is within range
                 if (col_rel <= ruleset.nodes[searched_self.obj_class_id].range) and (row_rel <= ruleset.nodes[searched_self.obj_class_id].range):
-                    limit_counter = 0
                     for limit in ruleset.nodes[searched_self.obj_class_id].limits:
                         if limit.blockType == self.obj_name:
                             if searched_self.obj_limits[limit.blockType] > 0:
                                 searched_self.obj_limits[limit.blockType] -= 1
                             if searched_self.obj_limits[limit.blockType] == 0:
                                 searched_self.obj_limits.pop(limit.blockType)
-                            else:
-                                if searched_self.obj_limits[limit.blockType] >= limit.lowerLimit:
-                                    limit_counter += 1 # Works as a checksum for the limits
-                                                       # Object can have multiple conditions, If all are met, the object is "green"
-                    # If no limits are satisfied
-                    if limit_counter == 0 and len(ruleset.nodes[searched_self.obj_class_id].limits) > 0:
-                        plocha.delete(searched_self.overlay)
-                        searched_self.overlay = plocha.create_image(searched_self.top_l + tile_size // 2, searched_self.top_r + tile_size // 2, image=red_overlay)
-                    
-                    # If some limits are satisfied
-                    elif len(ruleset.nodes[searched_self.obj_class_id].limits) != 1 and len(ruleset.nodes[searched_self.obj_class_id].limits) > limit_counter > 0:
-                        plocha.delete(searched_self.overlay)
-                        searched_self.overlay = plocha.create_image(searched_self.top_l + tile_size // 2, searched_self.top_r + tile_size // 2, image=yellow_overlay)
+                    decide_overlay_based_on_limits(searched_self, True)
 
         self.obj_class_id = -1
         self.obj_name = ""
@@ -157,6 +166,7 @@ def calculate_id(obj_id):
         id_counter += 1
     return id_counter
 
+
 #--------------------------------------------------------------------
 def draw(space: MySpace):
     space.obj_name = ruleset.nodes[space.obj_class_id].name
@@ -195,46 +205,20 @@ def draw(space: MySpace):
 
             # ITERATED OBJECT SECTION
             if col_rel <= ruleset.nodes[searched_space.obj_class_id].range and row_rel <= ruleset.nodes[searched_space.obj_class_id].range:
-                limit_counter = 0
+                print("Searching for limits, curr_obj: ", ruleset.nodes[space.obj_class_id].name, " iterated_obj: ", ruleset.nodes[searched_space.obj_class_id].name)
+                print("-----------------------------------")
                 for limit in ruleset.nodes[searched_space.obj_class_id].limits:
                     if limit.blockType == space.obj_name:
                         if limit.blockType not in searched_space.obj_limits:
                             searched_space.obj_limits[limit.blockType] = 1
                         else:
                             searched_space.obj_limits[limit.blockType] += 1
-
-                        if searched_space.obj_limits[limit.blockType] >= limit.lowerLimit:
-                            limit_counter += 1 # Again - checksum for the limits
-                # all limits / conditions are met
-                if limit_counter == len(ruleset.nodes[searched_space.obj_class_id].limits) and len(ruleset.nodes[searched_space.obj_class_id].limits) > 0:
-                    plocha.delete(searched_space.overlay)
-                    #searched_space.fill = plocha.create_image(searched_space.top_l + tile_size // 2, searched_space.top_r + tile_size // 2, image=green_overlay)
-                
-                # some limits / conditions are met
-                elif len(ruleset.nodes[searched_space.obj_class_id].limits) > limit_counter > 0 and len(ruleset.nodes[searched_space.obj_class_id].limits) > 0:
-                    plocha.delete(searched_space.overlay)
-                    searched_space.overlay = plocha.create_image(searched_space.top_l + tile_size // 2, searched_space.top_r + tile_size // 2, image=yellow_overlay)
-                
-                # no limits / conditions are met
-                elif limit_counter == 0 and len(ruleset.nodes[searched_space.obj_class_id].limits) > 0:
-                    plocha.delete(searched_space.overlay)
-                    searched_space.overlay = plocha.create_image(searched_space.top_l + tile_size // 2, searched_space.top_r + tile_size // 2, image=red_overlay)
+                decide_overlay_based_on_limits(searched_space, True)
 
     image_id = plocha.create_image(space.top_l + tile_size // 2, space.top_r + tile_size // 2, image=images[space.obj_name])
     space.fill = image_id
 
-    if space_has_limits:
-        limits_satisfied = [
-            limit.lowerLimit <= space.obj_limits.get(limit.blockType, 0) <= limit.upperLimit
-            for limit in ruleset.nodes[space.obj_class_id].limits
-        ]
-        if all(limits_satisfied):
-            return
-        elif any(limits_satisfied):
-            space.overlay = plocha.create_image(space.top_l + tile_size // 2, space.top_r + tile_size // 2, image=yellow_overlay)
-        else:
-            space.overlay = plocha.create_image(space.top_l + tile_size // 2, space.top_r + tile_size // 2, image=red_overlay)
-
+    decide_overlay_based_on_limits(space)
 
 #------------------------------------------------------------
 #
