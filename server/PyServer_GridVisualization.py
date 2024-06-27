@@ -82,16 +82,33 @@ def decide_overlay_based_on_limits(space, delete = False):
     if all_limits_satisfied:
         if(delete):
             plocha.delete(space.overlay)
+
+        # sudden change from NOT BEING GREEN to not BEING GREEN -> warrants a POSITIVE CHANGE
+        if not space.is_green:
+            update_neighbours(space, True)
+
         space.is_green = True
         return
+    
     if any_limits_satisfied:
         if(delete):
             plocha.delete(space.overlay)
+
+        # sudden change from BEING GREEN to NOT BEING GREEN -> warrants a NEGATIVE change
+        if space.is_green:
+            update_neighbours(space, False)
+
         space.is_green = False
         space.overlay = plocha.create_image(space.top_l + tile_size // 2, space.top_r + tile_size // 2, image=yellow_overlay)
+
     else:
         if(delete):
             plocha.delete(space.overlay)
+
+        # sudden change from BEING GREEN to NOT BEING GREEN -> warrants a NEGATIVE change
+        if space.is_green:
+            update_neighbours(space, False)
+
         space.is_green = False
         space.overlay = plocha.create_image(space.top_l + tile_size // 2, space.top_r + tile_size // 2, image=red_overlay)
 
@@ -109,10 +126,12 @@ class MySpace():
         self.bot_r = y2
         self.col = col
         self.row = row
+        self.actual_col = col
+        self.actual_row = row
         self.obj_class_id = -1
         self.obj_name = ""  
         self.obj_limits = {}  
-        self_neighs_pointing_to_me = []
+        self.neighs_pointing_to_me = []
         self.is_green = False
         self.image = plocha.create_rectangle(x1, y1, x2, y2, outline="white")
         self.text = plocha.create_text(x1 + tile_size//2, y1 + tile_size//2, text='{},{}'.format(col, row), font="Arial 10", fill="white")
@@ -133,7 +152,7 @@ class MySpace():
     def Erase(self):
         for col in range(0, w // tile_size):
             for row in range(0, h // tile_size):
-                if col == self.col and row == self.row:
+                if col == self.actual_col and row == self.actual_row:
                     continue
                 if mygrid.m_grid[col][row].obj_class_id == -1:
                     continue
@@ -144,7 +163,7 @@ class MySpace():
                 # calculating limits of the iterated neighbor object when the current object gets deleted
                 if (col_rel <= ruleset.nodes[searched_self.obj_class_id].range) and (row_rel <= ruleset.nodes[searched_self.obj_class_id].range):
                     for limit in ruleset.nodes[searched_self.obj_class_id].limits:
-                        if limit.blockType == self.obj_name and searched_self.is_green:
+                        if limit.blockType == self.obj_name:
                             if searched_self.obj_limits[limit.blockType] > 0:
                                 searched_self.obj_limits[limit.blockType] -= 1
                             # if searched_self.obj_limits[limit.blockType] == 0:
@@ -178,6 +197,23 @@ class MyGrid():
 mygrid = MyGrid()
 #--------------------------------------------------------------------
 
+def update_neighbours(space, is_root_green):
+    if not space.neighs_pointing_to_me:
+        return
+    for pair in space.neighs_pointing_to_me:
+        print("-----------------------------------")
+        print("Current space: ", space.obj_name, ", is green: ", is_root_green, "Neighbour: ", mygrid.m_grid[pair[0]][pair[1]].obj_name, ", is green: ", mygrid.m_grid[pair[0]][pair[1]].is_green)
+        if space.obj_name not in mygrid.m_grid[pair[0]][pair[1]].obj_limits:
+            continue
+
+        
+        if is_root_green:
+            mygrid.m_grid[pair[0]][pair[1]].obj_limits[space.obj_name] += 1
+        else:
+            if mygrid.m_grid[pair[0]][pair[1]].obj_limits[space.obj_name] > 0:
+                mygrid.m_grid[pair[0]][pair[1]].obj_limits[space.obj_name] -= 1
+
+        decide_overlay_based_on_limits(mygrid.m_grid[pair[0]][pair[1]], True)
 
 #--------------------------------------------------------------------
 def calculate_id(obj_id):
@@ -209,7 +245,7 @@ def draw(space: MySpace):
     # Then depending on the object's limits, change the color of the overlay
     for col in range(0, w // tile_size):
         for row in range(0, h // tile_size):
-            if col == space.col and row == space.row:
+            if col == space.actual_col and row == space.actual_row:
                 continue
             if mygrid.m_grid[col][row].obj_class_id == -1:
                 continue
@@ -222,21 +258,27 @@ def draw(space: MySpace):
             if space_has_limits and col_rel <= ruleset.nodes[space.obj_class_id].range and row_rel <= ruleset.nodes[space.obj_class_id].range:
                 for limit in ruleset.nodes[space.obj_class_id].limits:
                     # if the limit of the current object is the same as the object being iterated
-                    if searched_space.obj_name == limit.blockType and searched_space.is_green:
-                        space.obj_limits[limit.blockType] += 1
+                    if searched_space.obj_name == limit.blockType:
+
+                        searched_space.neighs_pointing_to_me.append((space.actual_col,space.actual_row))
+                        if searched_space.is_green:
+                            space.obj_limits[limit.blockType] += 1
 
             if not ruleset.nodes[searched_space.obj_class_id].limits:
                 continue
 
             # ITERATED OBJECT SECTION
             if col_rel <= ruleset.nodes[searched_space.obj_class_id].range and row_rel <= ruleset.nodes[searched_space.obj_class_id].range:
-                #print("Searching for limits, curr_obj: ", space.obj_name, " iterated_obj: ", searched_space.obj_name)
-                #print("-----------------------------------")
+
+
                 for limit in ruleset.nodes[searched_space.obj_class_id].limits:
                     # if the limit of the iterated object is the same as the object being drawn
-                    if limit.blockType == space.obj_name and space.is_green:
+                    if limit.blockType == space.obj_name:
+                        # saving the coordinates of the object which is pointing to the object being drawn - will help when accessing that neighbour to update its overlay                
+                        space.neighs_pointing_to_me.append((col,row))
                         #print("Limit found: ", limit.blockType, ", obj-limit: ", searched_space.obj_limits[limit.blockType])
-                        searched_space.obj_limits[limit.blockType] += 1
+                        if space.is_green:
+                            searched_space.obj_limits[limit.blockType] += 1
                         #print("Incremented limit: ", searched_space.obj_limits[limit.blockType])
                 decide_overlay_based_on_limits(searched_space, True)
 
@@ -291,6 +333,8 @@ class MyListener(TuioListener):
 
         myObjects.update({obj.session_id : MyObject(obj.class_id,actual_x,actual_y)})
         mygrid.m_grid[floor(actual_x/tile_size)][floor(actual_y/tile_size)].obj_class_id = calculate_id(obj.class_id) #updating the object class id
+        mygrid.m_grid[floor(actual_x/tile_size)][floor(actual_y/tile_size)].actual_col = floor(actual_x/tile_size)
+        mygrid.m_grid[floor(actual_x/tile_size)][floor(actual_y/tile_size)].actual_row = floor(actual_y/tile_size)
         mygrid.m_grid[floor(actual_x/tile_size)][floor(actual_y/tile_size)].Fill() # calling Fill on MySpace object, which holds x,y,ID of the object
 
     def update_tuio_object(self, obj):
@@ -311,6 +355,8 @@ class MyListener(TuioListener):
         if (not mygrid.m_grid[floor(lx/tile_size)][floor(ly/tile_size)].__eq__(mygrid.m_grid[floor(actual_x/tile_size)][floor(actual_y/tile_size)])):
             mygrid.m_grid[floor(lx/tile_size)][floor(ly/tile_size)].Erase()
             mygrid.m_grid[floor(actual_x/tile_size)][floor(actual_y/tile_size)].obj_class_id = calculate_id(obj.class_id) #updating the object class id
+            mygrid.m_grid[floor(actual_x/tile_size)][floor(actual_y/tile_size)].actual_col = floor(actual_x/tile_size)
+            mygrid.m_grid[floor(actual_x/tile_size)][floor(actual_y/tile_size)].actual_row = floor(actual_y/tile_size)
 
             mygrid.m_grid[floor(actual_x/tile_size)][floor(actual_y/tile_size)].Fill() # calling Fill on MySpace object, which holds x,y,ID of the object
 
