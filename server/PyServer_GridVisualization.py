@@ -16,7 +16,7 @@ multiplier = 1.5
 w = int(640 * multiplier)
 h = int(480 * multiplier)
 scale = int(15 * multiplier) #jen pro ukazovatko
-magic_number = int(40 * multiplier)
+tile_size = int(40 * multiplier)
 
 
 config_path = 'helper_files/config.json'
@@ -24,8 +24,8 @@ config_path = 'helper_files/config.json'
 ruleset = Ruleset.parse_json(config_path)
 print(ruleset)
 
-num_of_QR_codes = 20
-qr_per_obj = num_of_QR_codes // len(ruleset.nodes)
+num_of_QR_codes = 20 # how many QR codes are there
+qr_per_obj = num_of_QR_codes // len(ruleset.nodes) # how many QR codes are there per object
 #qr_per_obj = 5
 
 qr_mode = 1 # 0 -> 1 QR per object, 1 -> 5 QR per object
@@ -39,10 +39,10 @@ plocha.pack()
 
 #------------------------------------------------------------
 images = {
-    'Park': ImageTk.PhotoImage(Image.open('images/park.png').resize((magic_number, magic_number))),
-    'Apartment Buildings': ImageTk.PhotoImage(Image.open('images/apartment_buildings.png').resize((magic_number, magic_number))),
-    'Fire Station': ImageTk.PhotoImage(Image.open('images/fire_house.png').resize((magic_number, magic_number))),
-    'Lake': ImageTk.PhotoImage(Image.open('images/lake.png').resize((magic_number, magic_number))),    
+    'Park': ImageTk.PhotoImage(Image.open('images/park.png').resize((tile_size, tile_size))),
+    'Apartment Buildings': ImageTk.PhotoImage(Image.open('images/apartment_buildings.png').resize((tile_size, tile_size))),
+    'Fire Station': ImageTk.PhotoImage(Image.open('images/fire_house.png').resize((tile_size, tile_size))),
+    'Lake': ImageTk.PhotoImage(Image.open('images/lake.png').resize((tile_size, tile_size))),    
 }
 
 def create_overlay(color, size, opacity):
@@ -50,9 +50,9 @@ def create_overlay(color, size, opacity):
     return ImageTk.PhotoImage(overlay)
 
 opacity_settings = 0.5
-green_overlay = create_overlay((0, 255, 0), (magic_number, magic_number), opacity_settings)
-yellow_overlay = create_overlay((255, 255, 0), (magic_number, magic_number), opacity_settings)
-red_overlay = create_overlay((255, 0, 0), (magic_number, magic_number), opacity_settings)
+green_overlay = create_overlay((0, 255, 0), (tile_size, tile_size), opacity_settings)
+yellow_overlay = create_overlay((255, 255, 0), (tile_size, tile_size), opacity_settings)
+red_overlay = create_overlay((255, 0, 0), (tile_size, tile_size), opacity_settings)
 
 #------------------------------------------------------------
 # Grid vizualization 
@@ -71,7 +71,7 @@ class MySpace():
         self.obj_name = ""  
         self.obj_limits = {}  
         self.image = plocha.create_rectangle(x1, y1, x2, y2)
-        self.text = plocha.create_text(x1 + 20, y1 + 20, text='{},{}'.format(col, row), font="Arial 10")
+        self.text = plocha.create_text(x1 + tile_size//2, y1 + tile_size//2, text='{},{}'.format(col, row), font="Arial 10")
         self.fill = None
         self.overlay = None
 
@@ -82,10 +82,12 @@ class MySpace():
     
     def Fill(self):
         draw(self)
-        
+
+    # Goes through all of the objects which exist in the grid and checks if the object which is being erased is in the range of any other object
+    # Which would change the color of the overlay of the neighboring object    
     def Erase(self):
-        for col in range(0, w // magic_number):
-            for row in range(0, h // magic_number):
+        for col in range(0, w // tile_size):
+            for row in range(0, h // tile_size):
                 if col == self.col and row == self.row:
                     continue
                 if mygrid.m_grid[col][row].obj_class_id == -1:
@@ -93,7 +95,8 @@ class MySpace():
                 searched_self = mygrid.m_grid[col][row]
                 col_rel = abs(self.col - searched_self.col)
                 row_rel = abs(self.row - searched_self.row)
-
+                
+                # Is within range
                 if (col_rel <= ruleset.nodes[searched_self.obj_class_id].range) and (row_rel <= ruleset.nodes[searched_self.obj_class_id].range):
                     limit_counter = 0
                     for limit in ruleset.nodes[searched_self.obj_class_id].limits:
@@ -104,14 +107,17 @@ class MySpace():
                                 searched_self.obj_limits.pop(limit.blockType)
                             else:
                                 if searched_self.obj_limits[limit.blockType] >= limit.lowerLimit:
-                                    limit_counter += 1
-
+                                    limit_counter += 1 # Works as a checksum for the limits
+                                                       # Object can have multiple conditions, If all are met, the object is "green"
+                    # If no limits are satisfied
                     if limit_counter == 0 and len(ruleset.nodes[searched_self.obj_class_id].limits) > 0:
                         plocha.delete(searched_self.overlay)
-                        searched_self.overlay = plocha.create_image(searched_self.top_l + magic_number // 2, searched_self.top_r + magic_number // 2, image=red_overlay)
+                        searched_self.overlay = plocha.create_image(searched_self.top_l + tile_size // 2, searched_self.top_r + tile_size // 2, image=red_overlay)
+                    
+                    # If some limits are satisfied
                     elif len(ruleset.nodes[searched_self.obj_class_id].limits) != 1 and len(ruleset.nodes[searched_self.obj_class_id].limits) > limit_counter > 0:
                         plocha.delete(searched_self.overlay)
-                        searched_self.overlay = plocha.create_image(searched_self.top_l + magic_number // 2, searched_self.top_r + magic_number // 2, image=yellow_overlay)
+                        searched_self.overlay = plocha.create_image(searched_self.top_l + tile_size // 2, searched_self.top_r + tile_size // 2, image=yellow_overlay)
 
         self.obj_class_id = -1
         self.obj_name = ""
@@ -127,11 +133,13 @@ class MyGrid():
     def __init__(self):
         self.m_grid = []
         col_cnt = 0
-        for i in range(0,w,magic_number):
+        for i in range(0,w,tile_size):
             self.m_grid.append([])
             row_cnt=0
-            for j in range(0,h,magic_number):
-                self.m_grid[col_cnt].append(MySpace(i,j,i+magic_number,j+magic_number,col_cnt,row_cnt))
+            for j in range(0,h,tile_size):
+                self.m_grid[col_cnt].append(MySpace(i,j,i+tile_size,j+tile_size,col_cnt,row_cnt)) # Fills the m_grid with "empty objects"
+                                                                                                  # Constructor of MySpace sets ID to -1 marking it as empty, because a 
+                                                                                                  # used object gets its ID rewritten right away
                 row_cnt = row_cnt+1
             col_cnt = col_cnt+1        
 mygrid = MyGrid()
@@ -149,8 +157,7 @@ def calculate_id(obj_id):
         id_counter += 1
     return id_counter
 
-
-# TODO: LQ a Park - 
+#--------------------------------------------------------------------
 def draw(space: MySpace):
     space.obj_name = ruleset.nodes[space.obj_class_id].name
     space_has_limits = False
@@ -161,8 +168,10 @@ def draw(space: MySpace):
     for limit in ruleset.nodes[space.obj_class_id].limits:
         space.obj_limits.update({limit.blockType: 0})
 
-    for col in range(0, w // magic_number):
-        for row in range(0, h // magic_number):
+    # Go through all of the objects and always check the distance between the iterated object and the object being drawn
+    # Then depending on the object's limits, change the color of the overlay
+    for col in range(0, w // tile_size):
+        for row in range(0, h // tile_size):
             if col == space.col and row == space.row:
                 continue
             if mygrid.m_grid[col][row].obj_class_id == -1:
@@ -171,7 +180,8 @@ def draw(space: MySpace):
             searched_space = mygrid.m_grid[col][row]
             col_rel = abs(space.col - searched_space.col)
             row_rel = abs(space.row - searched_space.row)
-
+            
+            # OBJECT BEING DRAWN SECTION
             if space_has_limits and col_rel <= ruleset.nodes[space.obj_class_id].range and row_rel <= ruleset.nodes[space.obj_class_id].range:
                 for limit in ruleset.nodes[space.obj_class_id].limits:
                     if searched_space.obj_name == limit.blockType:
@@ -183,6 +193,7 @@ def draw(space: MySpace):
             if not ruleset.nodes[searched_space.obj_class_id].limits:
                 continue
 
+            # ITERATED OBJECT SECTION
             if col_rel <= ruleset.nodes[searched_space.obj_class_id].range and row_rel <= ruleset.nodes[searched_space.obj_class_id].range:
                 limit_counter = 0
                 for limit in ruleset.nodes[searched_space.obj_class_id].limits:
@@ -193,19 +204,23 @@ def draw(space: MySpace):
                             searched_space.obj_limits[limit.blockType] += 1
 
                         if searched_space.obj_limits[limit.blockType] >= limit.lowerLimit:
-                            limit_counter += 1
-
+                            limit_counter += 1 # Again - checksum for the limits
+                # all limits / conditions are met
                 if limit_counter == len(ruleset.nodes[searched_space.obj_class_id].limits) and len(ruleset.nodes[searched_space.obj_class_id].limits) > 0:
                     plocha.delete(searched_space.overlay)
-                    #searched_space.fill = plocha.create_image(searched_space.top_l + magic_number // 2, searched_space.top_r + magic_number // 2, image=green_overlay)
+                    #searched_space.fill = plocha.create_image(searched_space.top_l + tile_size // 2, searched_space.top_r + tile_size // 2, image=green_overlay)
+                
+                # some limits / conditions are met
                 elif len(ruleset.nodes[searched_space.obj_class_id].limits) > limit_counter > 0 and len(ruleset.nodes[searched_space.obj_class_id].limits) > 0:
                     plocha.delete(searched_space.overlay)
-                    searched_space.overlay = plocha.create_image(searched_space.top_l + magic_number // 2, searched_space.top_r + magic_number // 2, image=yellow_overlay)
+                    searched_space.overlay = plocha.create_image(searched_space.top_l + tile_size // 2, searched_space.top_r + tile_size // 2, image=yellow_overlay)
+                
+                # no limits / conditions are met
                 elif limit_counter == 0 and len(ruleset.nodes[searched_space.obj_class_id].limits) > 0:
                     plocha.delete(searched_space.overlay)
-                    searched_space.overlay = plocha.create_image(searched_space.top_l + magic_number // 2, searched_space.top_r + magic_number // 2, image=red_overlay)
+                    searched_space.overlay = plocha.create_image(searched_space.top_l + tile_size // 2, searched_space.top_r + tile_size // 2, image=red_overlay)
 
-    image_id = plocha.create_image(space.top_l + magic_number // 2, space.top_r + magic_number // 2, image=images[space.obj_name])
+    image_id = plocha.create_image(space.top_l + tile_size // 2, space.top_r + tile_size // 2, image=images[space.obj_name])
     space.fill = image_id
 
     if space_has_limits:
@@ -216,13 +231,9 @@ def draw(space: MySpace):
         if all(limits_satisfied):
             return
         elif any(limits_satisfied):
-            space.overlay = plocha.create_image(space.top_l + magic_number // 2, space.top_r + magic_number // 2, image=yellow_overlay)
+            space.overlay = plocha.create_image(space.top_l + tile_size // 2, space.top_r + tile_size // 2, image=yellow_overlay)
         else:
-            space.overlay = plocha.create_image(space.top_l + magic_number // 2, space.top_r + magic_number // 2, image=red_overlay)
-
-#--------------------------------------------------------------------
-# all good - :))
-#--------------------------------------------------------------------
+            space.overlay = plocha.create_image(space.top_l + tile_size // 2, space.top_r + tile_size // 2, image=red_overlay)
 
 
 #------------------------------------------------------------
@@ -261,8 +272,8 @@ class MyListener(TuioListener):
         actual_y=Decimal(y*h)
         
         myObjects.update({obj.session_id : MyObject(obj.class_id,actual_x,actual_y)})
-        mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)].obj_class_id = calculate_id(obj.class_id) #updating the object class id
-        mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)].Fill() # calling Fill on MySpace object, which holds x,y,ID of the object
+        mygrid.m_grid[floor(actual_x/tile_size)][floor(actual_y/tile_size)].obj_class_id = calculate_id(obj.class_id) #updating the object class id
+        mygrid.m_grid[floor(actual_x/tile_size)][floor(actual_y/tile_size)].Fill() # calling Fill on MySpace object, which holds x,y,ID of the object
 
     def update_tuio_object(self, obj):
         x,y = obj.position
@@ -279,13 +290,11 @@ class MyListener(TuioListener):
 
         myObjects[obj.session_id].move(delta_x,delta_y)
 
+        if (not mygrid.m_grid[floor(lx/tile_size)][floor(ly/tile_size)].__eq__(mygrid.m_grid[floor(actual_x/tile_size)][floor(actual_y/tile_size)])):
+            mygrid.m_grid[floor(lx/tile_size)][floor(ly/tile_size)].Erase()
+            mygrid.m_grid[floor(actual_x/tile_size)][floor(actual_y/tile_size)].obj_class_id = calculate_id(obj.class_id) #updating the object class id
 
-
-        if (not mygrid.m_grid[floor(lx/magic_number)][floor(ly/magic_number)].__eq__(mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)])):
-            mygrid.m_grid[floor(lx/magic_number)][floor(ly/magic_number)].Erase()
-            mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)].obj_class_id = calculate_id(obj.class_id) #updating the object class id
-
-            mygrid.m_grid[floor(actual_x/magic_number)][floor(actual_y/magic_number)].Fill() # calling Fill on MySpace object, which holds x,y,ID of the object
+            mygrid.m_grid[floor(actual_x/tile_size)][floor(actual_y/tile_size)].Fill() # calling Fill on MySpace object, which holds x,y,ID of the object
 
         myObjects[obj.session_id].last_x = actual_x
         myObjects[obj.session_id].last_y = actual_y
@@ -294,7 +303,7 @@ class MyListener(TuioListener):
         #print("Object " ,obj.session_id, " of class ",obj.class_id," was deleted.")
         lx= myObjects[obj.session_id].last_x
         ly= myObjects[obj.session_id].last_y
-        mygrid.m_grid[floor(lx/magic_number)][floor(ly/magic_number)].Erase()
+        mygrid.m_grid[floor(lx/tile_size)][floor(ly/tile_size)].Erase()
         myObjects[obj.session_id].delete()
         del myObjects[obj.session_id]
 
