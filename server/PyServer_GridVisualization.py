@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from math import floor
 from pythontuio import TuioClient
 from pythontuio import TuioListener
@@ -222,8 +223,11 @@ def calculate_id(obj_id):
 
     id_counter = 0
     while(obj_id > qr_per_obj - 1):
-        obj_id -= qr_per_obj
-        id_counter += 1
+         obj_id -= qr_per_obj
+         id_counter += 1
+    if(id_counter > 3):
+        return 1 # for the purpose of testing, we wanted more apartment buildings
+
     return id_counter
 
 
