@@ -10,11 +10,16 @@ There are 2 goals of this project:
 
 ## Setup Guide
 *It is recommended to run our implementation on Linux*  
+Disclaimer:
+Setting it up on your device might not go smoothly even after following all our instructions. You may have to turn to Stack Overflow or ChatGPT to fix some issues.
+
 ### Dependencies
 Python libraries:
 * *pip3 install python-tuio*
 * *pip3 install python-osc*
 * *sudo apt install python3-tk*
+* *pip install pillow* (if errors pop up *python3 -m pip install --upgrade Pillow*)
+
 
 Tracker libraries:
 * *sudo apt install libopencv-dev*
@@ -28,6 +33,9 @@ Tracker libraries:
   - ***./tracker***
 * There is also a tracker switch provided to change the input camera
   - ***./tracker -v 2***
+
+Changing the tracker IS possible, but you need to change YOUR qpath to thesis-tracker in CMakeCache.txt wherever is the keyword "jamo" - pathway on my local thesis-tracker
+
 ### Server
 * Download **server** repository
 * The contents are:
