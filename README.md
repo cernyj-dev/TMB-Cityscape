@@ -16,6 +16,11 @@ Python libraries:
 * *pip3 install python-osc*
 * *sudo apt install python3-tk*
 
+Tracker libraries:
+* *sudo apt install libopencv-dev*
+* *sudo apt install libfmt-dev*
+* *sudo apt install libeigen3-dev*
+
 ### Tracker
 * Download **thesis-tracker.zip** from Trackers repository. The tracker is already built inside of it. This version was used for our project.
 * Unzip
