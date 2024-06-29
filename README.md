@@ -47,3 +47,8 @@ Changing the tracker IS possible, but you need to change YOUR qpath to thesis-tr
 * Run the program by executing:
   -  ***python3 PyServer_GridVisualization.py***
 * Close the program by pressing ***q***
+
+### Table
+* Connect your computer to the projector using an HDMI cable, plug in the charger
+* Turn on the projector (with the *-v* switch if needed)
+* Turn on the PyServer, drag the Canvas window on the second screen and double click to maximize
