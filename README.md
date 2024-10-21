@@ -35,6 +35,13 @@ Tracker libraries:
   - ***./tracker -v 2***
 
 Changing the tracker IS possible, but you need to change YOUR qpath to thesis-tracker in CMakeCache.txt wherever is the keyword "jamo" - pathway on my local thesis-tracker
+* All occurances in the file:
+  - thesis_tracker_BINARY_DIR:STATIC=/home/jamo/Desktop/SP1/thesis-tracker
+  - thesis_tracker_SOURCE_DIR:STATIC=/home/jamo/Desktop/SP1/thesis-tracker
+  - CMAKE_CACHEFILE_DIR:INTERNAL=/home/jamo/Desktop/SP1/thesis-tracker
+  - CMAKE_HOME_DIRECTORY:INTERNAL=/home/jamo/Desktop/SP1/thesis-tracker
+* Just find your local path to the thesis-tracker folder and rewrite it
+
 
 ### Server
 * Download **server** repository
