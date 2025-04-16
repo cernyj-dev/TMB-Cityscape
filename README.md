@@ -1,5 +1,8 @@
 # SP1 - TMB - CityScape Logic
 
+## Introduction
+This is a semester project building upon another student’s thesis, which involved deploying a Tactile Matrix Box (TMB) on the university campus. The TMB processed data from ArUcO cards (similar to QR codes) placed on a table, using a mounted camera. Our team developed a Python server that received this data and implemented the logic for evaluating the cards using the Tkinter Python library. The system then visualized buildings and evaluation results, projecting them back onto the table using a projector.
+
 ## Project goals
 
 There are 2 goals of this project:
